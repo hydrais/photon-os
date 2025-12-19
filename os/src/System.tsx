@@ -5,18 +5,20 @@ import { StatusBar } from "./components/system/status-bar";
 import { OperatingSystemContext } from "./lib/os/OperatingSystemContext";
 
 export function System() {
-  const { api } = useContext(OperatingSystemContext);
+  const { api, multitasking, setMultitasking } = useContext(
+    OperatingSystemContext
+  );
 
   return (
     <div className="h-screen flex flex-col">
       <StatusBar />
       <div className="flex-1 bg-background flex flex-col">
-        <AppView />
+        <AppView showMultitasking={multitasking} />
       </div>
       <NavigationBar
         onBack={() => {}}
         onHome={api.system_homeButton}
-        onMultitasking={() => {}}
+        onMultitasking={() => setMultitasking(!multitasking)}
         side="right"
       />
     </div>

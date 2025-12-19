@@ -8,7 +8,7 @@ import { LAUNCHER_APP, SYSTEM_APPS } from "../OperatingSystemContext";
 
 export function useApps() {
   const [runningApps, setRunningApps] = useState<RunningAppInstance[]>([
-    { definition: LAUNCHER_APP, isInBackground: false, startedAt: new Date() },
+    { definition: LAUNCHER_APP, isInBackground: false, startedAt: new Date(), lastForegroundedAt: new Date() },
   ]);
 
   const [installedApps, setInstalledApps] =
@@ -55,12 +55,14 @@ export function useApps() {
       foregroundApp(app);
       return;
     }
+    const now = new Date();
     setRunningApps([
       ...runningApps.map((a) => ({ ...a, isInBackground: true })),
       {
         definition: app,
         isInBackground: false,
-        startedAt: new Date(),
+        startedAt: now,
+        lastForegroundedAt: now,
       },
     ]);
   };
@@ -71,12 +73,30 @@ export function useApps() {
     );
     if (!runningApp) throw new Error(`App not running: ${app.bundleId}`);
 
+    const now = new Date();
     setRunningApps(
       runningApps.map((a) => ({
         ...a,
         isInBackground: a.definition.bundleId === app.bundleId ? false : true,
+        lastForegroundedAt:
+          a.definition.bundleId === app.bundleId ? now : a.lastForegroundedAt,
       }))
     );
+  };
+
+  const closeApp = (app: AppDefinition) => {
+    if (app.bundleId === LAUNCHER_APP.bundleId) return;
+    setRunningApps((prev) => {
+      const filtered = prev.filter(
+        (a) => a.definition.bundleId !== app.bundleId
+      );
+      if (filtered.length > 0 && filtered.every((a) => a.isInBackground)) {
+        const lastApp = filtered[filtered.length - 1];
+        lastApp.isInBackground = false;
+        lastApp.lastForegroundedAt = new Date();
+      }
+      return filtered;
+    });
   };
 
   return {
@@ -87,6 +107,7 @@ export function useApps() {
     loading,
     foregroundApp,
     launchApp,
+    closeApp,
     installApp,
     uninstallApp,
   };

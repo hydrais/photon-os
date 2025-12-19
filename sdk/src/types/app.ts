@@ -10,5 +10,6 @@ export type AppDefinition = {
 export type RunningAppInstance = {
   definition: AppDefinition;
   startedAt: Date;
+  lastForegroundedAt: Date;
   isInBackground: boolean;
 };

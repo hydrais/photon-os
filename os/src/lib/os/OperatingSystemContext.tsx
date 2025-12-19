@@ -43,6 +43,10 @@ type OperatingSystemContextType = {
     bundleId: string,
     element: HTMLIFrameElement | null
   ) => void;
+  foregroundApp: (app: AppDefinition) => void;
+  closeApp: (app: AppDefinition) => void;
+  multitasking: boolean;
+  setMultitasking: (value: boolean) => void;
 };
 
 export const OperatingSystemContext = createContext<OperatingSystemContextType>(
@@ -55,6 +59,7 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
     useState<AppDefinition | null>(null);
   const [uninstallAppRequest, setUninstallAppRequest] =
     useState<AppDefinition | null>(null);
+  const [multitasking, setMultitasking] = useState(false);
 
   const {
     runningApps,
@@ -64,6 +69,7 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
     loading: appsLoading,
     launchApp,
     foregroundApp,
+    closeApp,
     installApp,
     uninstallApp,
   } = useApps();
@@ -108,6 +114,10 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
         installedApps,
         appIframeRefs,
         setAppIframeRef,
+        foregroundApp,
+        closeApp,
+        multitasking,
+        setMultitasking,
       }}
     >
       {loading ? (

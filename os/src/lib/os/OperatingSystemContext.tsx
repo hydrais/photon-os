@@ -14,6 +14,8 @@ import type {
 import { useApps } from "./hooks/useApps";
 import { Spinner } from "@/components/ui/spinner";
 import * as pmrpc from "pm-rpc";
+import { InstallAppDrawer } from "@/components/system/install-app-drawer";
+import { UninstallAppDrawer } from "@/components/system/uninstall-app-drawer";
 
 export const LAUNCHER_APP: AppDefinition = {
   bundleId: "com.photon-os.launcher",
@@ -49,6 +51,10 @@ export const OperatingSystemContext = createContext<OperatingSystemContextType>(
 
 export function OperatingSystemProvider({ children }: PropsWithChildren) {
   const [apiLoading, setApiLoading] = useState(true);
+  const [installAppRequest, setInstallAppRequest] =
+    useState<AppDefinition | null>(null);
+  const [uninstallAppRequest, setUninstallAppRequest] =
+    useState<AppDefinition | null>(null);
 
   const {
     runningApps,
@@ -58,6 +64,8 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
     loading: appsLoading,
     launchApp,
     foregroundApp,
+    installApp,
+    uninstallApp,
   } = useApps();
 
   const api: OperatingSystemAPI = useMemo(
@@ -74,6 +82,12 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
       },
       async apps_foregroundApp(app) {
         foregroundApp(app);
+      },
+      async apps_requestAppInstall(app) {
+        setInstallAppRequest(app);
+      },
+      async apps_requestAppUninstall(app) {
+        setUninstallAppRequest(app);
       },
     }),
     [installedApps, runningApps]
@@ -101,7 +115,28 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
           <Spinner />
         </div>
       ) : (
-        children
+        <>
+          {children}
+          <InstallAppDrawer
+            app={installAppRequest}
+            type="permanent"
+            onDecline={() => setInstallAppRequest(null)}
+            onInstall={() => {
+              if (!installAppRequest) return;
+              installApp(installAppRequest);
+              setInstallAppRequest(null);
+            }}
+          />
+          <UninstallAppDrawer
+            app={uninstallAppRequest}
+            onDecline={() => setUninstallAppRequest(null)}
+            onUninstall={() => {
+              if (!uninstallAppRequest) return;
+              uninstallApp(uninstallAppRequest);
+              setUninstallAppRequest(null);
+            }}
+          />
+        </>
       )}
     </OperatingSystemContext.Provider>
   );

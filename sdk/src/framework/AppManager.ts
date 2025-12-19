@@ -17,4 +17,14 @@ export class AppManager {
     const api = await this.os.getRPCAPI();
     return await api.apps_launchApp(app);
   }
+
+  public async requestAppInstall(app: AppDefinition) {
+    const api = await this.os.getRPCAPI();
+    return await api.apps_requestAppInstall(app);
+  }
+
+  public async requestAppUninstall(app: AppDefinition) {
+    const api = await this.os.getRPCAPI();
+    return await api.apps_requestAppUninstall(app);
+  }
 }

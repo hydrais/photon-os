@@ -11,4 +11,6 @@ export type OperatingSystemAPI = {
   apps_getInstalledApps: () => Promise<AppDefinition[]>;
   apps_launchApp: (app: AppDefinition) => Promise<AppLaunchResult>;
   apps_foregroundApp: (app: AppDefinition) => Promise<void>;
+  apps_requestAppInstall: (app: AppDefinition) => Promise<void>;
+  apps_requestAppUninstall: (app: AppDefinition) => Promise<void>;
 };

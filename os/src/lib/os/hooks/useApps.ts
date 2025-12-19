@@ -35,6 +35,18 @@ export function useApps() {
     []
   );
 
+  const installApp = (app: AppDefinition) => {
+    const alreadyInstalled = installedApps.some(
+      (a) => a.bundleId === app.bundleId
+    );
+    if (alreadyInstalled) return;
+    setInstalledApps((v) => [...v, app]);
+  };
+
+  const uninstallApp = (app: AppDefinition) => {
+    setInstalledApps((v) => [...v.filter((a) => a.bundleId !== app.bundleId)]);
+  };
+
   const launchApp = (app: AppDefinition) => {
     const runningApp = runningApps.find(
       (a) => a.definition.bundleId === app.bundleId
@@ -75,5 +87,7 @@ export function useApps() {
     loading,
     foregroundApp,
     launchApp,
+    installApp,
+    uninstallApp,
   };
 }

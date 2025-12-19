@@ -1,4 +1,11 @@
 import type { AppDefinition } from "@photon-os/sdk";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { Info, Trash2 } from "lucide-react";
 
 function getAppColor(bundleId: string): string {
   const colors = [
@@ -44,29 +51,51 @@ function getInitials(name: string): string {
 export function AppIcon({
   app,
   onClick,
+  onAppInfo,
+  onUninstall,
+  canBeUninstalled = true,
 }: {
   app: AppDefinition;
   onClick: () => void;
+  onAppInfo: () => void;
+  onUninstall: () => void;
+  canBeUninstalled?: boolean;
 }) {
   const color = getAppColor(app.bundleId);
   const initials = getInitials(app.name);
 
   return (
-    <button
-      className="flex flex-col items-center gap-1.5 group"
-      onClick={onClick}
-    >
-      <div
-        className={`w-16 h-16 ${color} rounded-full flex items-center justify-center shadow-lg
-          group-hover:scale-105 group-active:scale-95 transition-transform duration-150`}
-      >
-        <span className="text-white text-xl font-semibold drop-shadow-sm">
-          {initials}
-        </span>
-      </div>
-      <span className="text-xs text-white font-medium drop-shadow-md truncate max-w-[72px] text-center">
-        {app.name}
-      </span>
-    </button>
+    <ContextMenu>
+      <ContextMenuTrigger asChild>
+        <button
+          className="flex flex-col items-center gap-1.5 group"
+          onClick={onClick}
+        >
+          <div
+            className={`w-16 h-16 ${color} rounded-full flex items-center justify-center shadow-lg
+              group-hover:scale-105 group-active:scale-95 transition-transform duration-150`}
+          >
+            <span className="text-white text-xl font-semibold drop-shadow-sm">
+              {initials}
+            </span>
+          </div>
+          <span className="text-xs text-white font-medium drop-shadow-md truncate max-w-[72px] text-center">
+            {app.name}
+          </span>
+        </button>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem onSelect={onAppInfo}>
+          <Info />
+          App Info
+        </ContextMenuItem>
+        {canBeUninstalled && (
+          <ContextMenuItem variant="destructive" onSelect={onUninstall}>
+            <Trash2 />
+            Uninstall
+          </ContextMenuItem>
+        )}
+      </ContextMenuContent>
+    </ContextMenu>
   );
 }

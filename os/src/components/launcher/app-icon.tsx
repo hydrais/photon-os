@@ -41,12 +41,21 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
-export function AppIcon({ app }: { app: AppDefinition }) {
+export function AppIcon({
+  app,
+  onClick,
+}: {
+  app: AppDefinition;
+  onClick: () => void;
+}) {
   const color = getAppColor(app.bundleId);
   const initials = getInitials(app.name);
 
   return (
-    <button className="flex flex-col items-center gap-1.5 group">
+    <button
+      className="flex flex-col items-center gap-1.5 group"
+      onClick={onClick}
+    >
       <div
         className={`w-16 h-16 ${color} rounded-full flex items-center justify-center shadow-lg
           group-hover:scale-105 group-active:scale-95 transition-transform duration-150`}

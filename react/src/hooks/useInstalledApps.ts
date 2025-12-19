@@ -12,7 +12,7 @@ export function useInstalledApps() {
     try {
       setError(null);
       setRefreshing(true);
-      setInstalledApps(await os.getInstalledApps());
+      setInstalledApps(await os.apps.getInstalledApps());
     } catch (err) {
       setError(err as Error);
     } finally {

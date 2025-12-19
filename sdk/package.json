@@ -34,5 +34,8 @@
   },
   "dependencies": {
     "pm-rpc": "^3.2.7"
+  },
+  "peerDependencies": {
+    "pm-rpc": "^3.2.7"
   }
 }

@@ -5,21 +5,30 @@ import type {
 } from "@photon-os/sdk";
 import { useState, useCallback } from "react";
 
-export function useApps() {
-  const LAUNCHER_DEF: AppDefinition = {
-    bundleId: "com.photon-os.launcher",
+const LAUNCHER_APP: AppDefinition = {
+  bundleId: "com.photon-os.launcher",
+  author: "Photon OS",
+  name: "Launcher",
+  url: "/__launcher",
+};
+
+const SYSTEM_APPS: AppDefinition[] = [
+  LAUNCHER_APP,
+  {
+    bundleId: "com.photon-os.settings",
     author: "Photon OS",
-    name: "Launcher",
-    url: "/__launcher",
-  };
+    name: "Settings",
+    url: "/__settings",
+  },
+];
 
+export function useApps() {
   const [runningApps, setRunningApps] = useState<RunningAppInstance[]>([
-    { definition: LAUNCHER_DEF, isInBackground: false, startedAt: new Date() },
+    { definition: LAUNCHER_APP, isInBackground: false, startedAt: new Date() },
   ]);
 
-  const [installedApps, setInstalledApps] = useState<AppDefinition[]>([
-    LAUNCHER_DEF,
-  ]);
+  const [installedApps, setInstalledApps] =
+    useState<AppDefinition[]>(SYSTEM_APPS);
 
   const [appIframeRefs, setAppIframeRefs] = useState<
     Record<AppBundleId, HTMLIFrameElement>

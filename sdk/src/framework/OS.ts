@@ -1,5 +1,5 @@
 import { AppDefinition } from "../types/app";
-import pmrpc from "pm-rpc";
+import * as pmrpc from "pm-rpc";
 import { OperatingSystemAPI } from "../types/os";
 
 export type OSConfig = {
@@ -14,8 +14,8 @@ export class OS {
   }
 
   async getInstalledApps(): Promise<AppDefinition[]> {
-    console.log("inside getInstalledApps");
-    return (await this.getRPCAPI()).apps_getInstalledApps();
+    const api = await this.getRPCAPI();
+    return await api.apps_getInstalledApps();
   }
 
   async getRPCAPI(): Promise<OperatingSystemAPI> {

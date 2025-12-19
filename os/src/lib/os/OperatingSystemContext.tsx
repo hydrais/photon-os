@@ -1,4 +1,9 @@
-import { createContext, useCallback, type PropsWithChildren } from "react";
+import {
+  createContext,
+  useEffect,
+  useState,
+  type PropsWithChildren,
+} from "react";
 import type {
   AppBundleId,
   AppDefinition,
@@ -7,7 +12,7 @@ import type {
 } from "@photon-os/sdk";
 import { useApps } from "./hooks/useApps";
 import { Spinner } from "@/components/ui/spinner";
-import pmrpc from "pm-rpc";
+import * as pmrpc from "pm-rpc";
 
 type OperatingSystemContextType = {
   runningApps: RunningAppInstance[];
@@ -24,6 +29,8 @@ export const OperatingSystemContext = createContext<OperatingSystemContextType>(
 );
 
 export function OperatingSystemProvider({ children }: PropsWithChildren) {
+  const [apiLoading, setApiLoading] = useState(true);
+
   const {
     runningApps,
     installedApps,
@@ -32,17 +39,17 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
     loading: appsLoading,
   } = useApps();
 
-  const loading = appsLoading;
-
-  useCallback(() => {
+  useEffect(() => {
     const api: OperatingSystemAPI = {
       async apps_getInstalledApps() {
-        console.log("getinstalledapps");
         return installedApps;
       },
     };
     pmrpc.api.set("photon_os", api);
+    setApiLoading(false);
   }, [installedApps]);
+
+  const loading = appsLoading || apiLoading;
 
   return (
     <OperatingSystemContext.Provider

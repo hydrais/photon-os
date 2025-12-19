@@ -4,19 +4,19 @@ import { useEffect, useState } from "react";
 export function useInstalledApps() {
   const [installedApps, setInstalledApps] = useState<AppDefinition[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const os = new OS();
 
   const refresh = async () => {
-    console.log("refreshing");
-
     try {
       setError(null);
-      setLoading(true);
+      setRefreshing(true);
       setInstalledApps(await os.getInstalledApps());
     } catch (err) {
       setError(err as Error);
     } finally {
+      setRefreshing(false);
       setLoading(false);
     }
   };
@@ -31,5 +31,5 @@ export function useInstalledApps() {
     return () => clearInterval(interval);
   }, []);
 
-  return { installedApps, refresh, loading, error };
+  return { installedApps, refresh, loading, refreshing, error };
 }

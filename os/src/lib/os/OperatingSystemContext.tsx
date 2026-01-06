@@ -66,7 +66,6 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
     installedApps,
     appIframeRefs,
     setAppIframeRef,
-    loading: appsLoading,
     launchApp,
     foregroundApp,
     closeApp,
@@ -104,7 +103,7 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
     setApiLoading(false);
   }, [api]);
 
-  const loading = appsLoading || apiLoading;
+  const loading = apiLoading;
 
   return (
     <OperatingSystemContext.Provider

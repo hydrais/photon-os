@@ -8,7 +8,12 @@ import { LAUNCHER_APP, SYSTEM_APPS } from "../OperatingSystemContext";
 
 export function useApps() {
   const [runningApps, setRunningApps] = useState<RunningAppInstance[]>([
-    { definition: LAUNCHER_APP, isInBackground: false, startedAt: new Date(), lastForegroundedAt: new Date() },
+    {
+      definition: LAUNCHER_APP,
+      isInBackground: false,
+      startedAt: new Date(),
+      lastForegroundedAt: new Date(),
+    },
   ]);
 
   const [installedApps, setInstalledApps] =
@@ -17,8 +22,6 @@ export function useApps() {
   const [appIframeRefs, setAppIframeRefs] = useState<
     Record<AppBundleId, HTMLIFrameElement>
   >({});
-
-  const [loading, setLoading] = useState(false);
 
   const setAppIframeRef = useCallback(
     (bundleId: AppBundleId, element: HTMLIFrameElement | null) => {
@@ -104,7 +107,6 @@ export function useApps() {
     installedApps,
     appIframeRefs,
     setAppIframeRef,
-    loading,
     foregroundApp,
     launchApp,
     closeApp,

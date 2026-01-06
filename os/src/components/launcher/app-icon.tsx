@@ -72,7 +72,7 @@ export function AppIcon({
           onClick={onClick}
         >
           <div
-            className={`w-16 h-16 ${color} rounded-full flex items-center justify-center shadow-lg
+            className={`w-12 h-12 ${color} rounded-full flex items-center justify-center shadow-lg
               group-hover:scale-105 group-active:scale-95 transition-transform duration-150`}
           >
             <span className="text-white text-xl font-semibold drop-shadow-sm">

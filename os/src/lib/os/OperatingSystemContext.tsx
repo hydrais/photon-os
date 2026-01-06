@@ -10,8 +10,10 @@ import type {
   AppDefinition,
   RunningAppInstance,
   OperatingSystemAPI,
+  PhotonUser,
 } from "@photon-os/sdk";
 import { useApps } from "./hooks/useApps";
+import { useAuth } from "../auth/AuthContext";
 import { Spinner } from "@/components/ui/spinner";
 import * as pmrpc from "pm-rpc";
 import { InstallAppDrawer } from "@/components/system/install-app-drawer";
@@ -61,6 +63,8 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
     useState<AppDefinition | null>(null);
   const [multitasking, setMultitasking] = useState(false);
 
+  const { user } = useAuth();
+
   const {
     runningApps,
     installedApps,
@@ -94,8 +98,18 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
       async apps_requestAppUninstall(app) {
         setUninstallAppRequest(app);
       },
+      async user_getCurrentUser(): Promise<PhotonUser> {
+        if (!user) throw new Error("Not authenticated");
+        return {
+          id: user.id,
+          displayName:
+            user.user_metadata?.display_name ||
+            user.email?.split("@")[0] ||
+            "User",
+        };
+      },
     }),
-    [installedApps, runningApps]
+    [installedApps, runningApps, user]
   );
 
   useEffect(() => {

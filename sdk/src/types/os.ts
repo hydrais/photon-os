@@ -1,4 +1,5 @@
 import { AppDefinition } from "./app";
+import { PhotonUser } from "./user";
 
 export type AppLaunchResult = {
   launched: boolean;
@@ -13,4 +14,5 @@ export type OperatingSystemAPI = {
   apps_foregroundApp: (app: AppDefinition) => Promise<void>;
   apps_requestAppInstall: (app: AppDefinition) => Promise<void>;
   apps_requestAppUninstall: (app: AppDefinition) => Promise<void>;
+  user_getCurrentUser: () => Promise<PhotonUser>;
 };

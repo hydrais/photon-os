@@ -1,6 +1,7 @@
 import * as pmrpc from "pm-rpc";
 import { OperatingSystemAPI } from "../types/os";
 import { AppManager } from "./AppManager";
+import { UserManager } from "./UserManager";
 
 export type OSConfig = {
   target: Window;
@@ -8,12 +9,14 @@ export type OSConfig = {
 
 export class OS {
   public apps: AppManager;
+  public user: UserManager;
 
   private config: OSConfig;
 
   constructor(config: OSConfig = { target: window.parent }) {
     this.config = config;
     this.apps = new AppManager(this);
+    this.user = new UserManager(this);
   }
 
   public async homeButton() {

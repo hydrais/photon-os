@@ -22,7 +22,9 @@ const BACKGROUND_PREF_KEY = "launcher_background_url";
 export function AppearanceSection() {
   const { user } = useAuth();
   const [images, setImages] = useState<PicsumImage[]>([]);
-  const [currentBackground, setCurrentBackground] = useState<string | null>(null);
+  const [currentBackground, setCurrentBackground] = useState<string | null>(
+    null
+  );
   const [loadingImages, setLoadingImages] = useState(true);
 
   useEffect(() => {
@@ -63,7 +65,7 @@ export function AppearanceSection() {
   const currentImageId = currentBackground?.match(/\/id\/(\d+)\//)?.[1] ?? null;
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 max-w-xl mx-auto">
       <div>
         <h2 className="text-lg font-semibold mb-1">Launcher Background</h2>
         <p className="text-sm text-muted-foreground">

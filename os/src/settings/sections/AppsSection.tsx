@@ -79,7 +79,7 @@ export function AppsSection() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4 max-w-xl mx-auto">
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-lg font-semibold mb-1">Installed Apps</h2>

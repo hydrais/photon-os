@@ -1,5 +1,6 @@
 import { AppDefinition } from "./app";
 import { PreferenceValue } from "./preferences";
+import { SecondLifeAccount } from "./secondlife";
 import { PhotonUser } from "./user";
 
 export type AppLaunchResult = {
@@ -24,4 +25,8 @@ export type OperatingSystemAPI = {
   prefs_getShared: (key: string) => Promise<PreferenceValue>;
   prefs_setShared: (key: string, value: PreferenceValue) => Promise<void>;
   prefs_deleteShared: (key: string) => Promise<void>;
+
+  // Second Life Accounts API
+  accounts_getLinkedSecondLifeAccounts: () => Promise<SecondLifeAccount[]>;
+  accounts_unlinkSecondLifeAccount: (avatarUuid: string) => Promise<void>;
 };

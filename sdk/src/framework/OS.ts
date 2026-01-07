@@ -1,5 +1,6 @@
 import * as pmrpc from "pm-rpc";
 import { OperatingSystemAPI } from "../types/os";
+import { AccountManager } from "./AccountManager";
 import { AppManager } from "./AppManager";
 import { PreferencesManager } from "./PreferencesManager";
 import { UserManager } from "./UserManager";
@@ -9,6 +10,7 @@ export type OSConfig = {
 };
 
 export class OS {
+  public accounts: AccountManager;
   public apps: AppManager;
   public prefs: PreferencesManager;
   public user: UserManager;
@@ -17,6 +19,7 @@ export class OS {
 
   constructor(config: OSConfig = { target: window.parent }) {
     this.config = config;
+    this.accounts = new AccountManager(this);
     this.apps = new AppManager(this);
     this.prefs = new PreferencesManager(this);
     this.user = new UserManager(this);

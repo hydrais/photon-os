@@ -14,6 +14,7 @@ import type {
   OperatingSystemAPI,
   PhotonUser,
   PreferenceValue,
+  SecondLifeAccount,
 } from "@photon-os/sdk";
 import { useApps } from "./hooks/useApps";
 import { useAuth } from "../auth/AuthContext";
@@ -29,6 +30,10 @@ import {
   setSharedPreference,
   deleteSharedPreference,
 } from "../supabase/preferences";
+import {
+  fetchLinkedSecondLifeAccounts,
+  deleteLinkedSecondLifeAccount,
+} from "../supabase/linkedSecondLifeAccounts";
 
 export const LAUNCHER_APP: AppDefinition = {
   bundleId: "com.photon-os.launcher",
@@ -180,6 +185,16 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
       async prefs_deleteShared(key: string): Promise<void> {
         if (!user) throw new Error("Not authenticated");
         await deleteSharedPreference(user.id, key);
+      },
+
+      // Second Life Accounts API
+      async accounts_getLinkedSecondLifeAccounts(): Promise<SecondLifeAccount[]> {
+        if (!user) throw new Error("Not authenticated");
+        return await fetchLinkedSecondLifeAccounts(user.id);
+      },
+      async accounts_unlinkSecondLifeAccount(avatarUuid: string): Promise<void> {
+        if (!user) throw new Error("Not authenticated");
+        await deleteLinkedSecondLifeAccount(user.id, avatarUuid);
       },
     }),
     [installedApps, runningApps, user, identifyCallingApp]

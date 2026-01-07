@@ -20,6 +20,7 @@ export function LoginPage() {
   const [displayName, setDisplayName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,9 +42,11 @@ export function LoginPage() {
             data: {
               display_name: displayName || email.split("@")[0],
             },
+            emailRedirectTo: `${window.location.origin}/__confirm`,
           },
         });
         if (error) throw error;
+        setEmailSent(true);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -51,6 +54,37 @@ export function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (emailSent) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-foreground p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Check Your Email</CardTitle>
+            <CardDescription>
+              We've sent a confirmation link to <strong>{email}</strong>
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <p className="text-sm text-muted-foreground">
+              Please check your email and click the confirmation link to
+              activate your account. Once confirmed, return here to sign in.
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setEmailSent(false);
+                setMode("login");
+                setPassword("");
+              }}
+            >
+              Return to Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-foreground p-4">

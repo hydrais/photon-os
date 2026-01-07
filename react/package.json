@@ -1,6 +1,6 @@
 {
   "name": "@photon-os/react",
-  "version": "0.1.0",
+  "version": "1.0.0-alpha.0",
   "description": "React bindings for Photon OS",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -29,6 +29,7 @@
   "author": "",
   "license": "ISC",
   "peerDependencies": {
+    "@photon-os/sdk": "^1.0.0-alpha.0",
     "react": ">=18.0.0"
   },
   "devDependencies": {

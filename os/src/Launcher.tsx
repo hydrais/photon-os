@@ -22,7 +22,7 @@ const BACKGROUND_PREF_KEY = "launcher_background_url";
 
 export function Launcher() {
   const { user } = useAuth();
-  const { installedApps, loading } = useInstalledApps();
+  const { installedApps, loading, refresh } = useInstalledApps();
   const [selectedApp, setSelectedApp] = useState<AppDefinition | null>(null);
   const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
 
@@ -40,6 +40,13 @@ export function Launcher() {
     const interval = setInterval(loadBackground, 3000);
     return () => clearInterval(interval);
   }, [user]);
+
+  // Refresh when window gains focus (e.g., returning from Settings)
+  useEffect(() => {
+    const handleFocus = () => refresh();
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [refresh]);
 
   const filteredApps = installedApps.filter(
     (a) => !FILTERED_BUNDLE_IDS.includes(a.bundleId)

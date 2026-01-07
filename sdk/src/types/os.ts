@@ -1,4 +1,5 @@
 import { AppDefinition } from "./app";
+import { PreferenceValue } from "./preferences";
 import { PhotonUser } from "./user";
 
 export type AppLaunchResult = {
@@ -15,4 +16,12 @@ export type OperatingSystemAPI = {
   apps_requestAppInstall: (app: AppDefinition) => Promise<void>;
   apps_requestAppUninstall: (app: AppDefinition) => Promise<void>;
   user_getCurrentUser: () => Promise<PhotonUser>;
+
+  // Preferences API
+  prefs_getSandboxed: (key: string) => Promise<PreferenceValue>;
+  prefs_setSandboxed: (key: string, value: PreferenceValue) => Promise<void>;
+  prefs_deleteSandboxed: (key: string) => Promise<void>;
+  prefs_getShared: (key: string) => Promise<PreferenceValue>;
+  prefs_setShared: (key: string, value: PreferenceValue) => Promise<void>;
+  prefs_deleteShared: (key: string) => Promise<void>;
 };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useInstalledApps } from "@photon-os/react";
 import { AppIcon } from "./components/launcher/app-icon";
 import { Spinner } from "./components/ui/spinner";
@@ -13,13 +13,33 @@ import {
 import { Button } from "./components/ui/button";
 import { OS, type AppDefinition } from "@photon-os/sdk";
 import { LAUNCHER_APP, SYSTEM_APPS } from "./lib/os/OperatingSystemContext";
+import { useAuth } from "./lib/auth/AuthContext";
+import { fetchSharedPreference } from "./lib/supabase/preferences";
 
 const FILTERED_BUNDLE_IDS = [LAUNCHER_APP.bundleId];
 const SYSTEM_APP_BUNDLE_IDS = SYSTEM_APPS.map((a) => a.bundleId);
+const BACKGROUND_PREF_KEY = "launcher_background_url";
 
 export function Launcher() {
+  const { user } = useAuth();
   const { installedApps, loading } = useInstalledApps();
   const [selectedApp, setSelectedApp] = useState<AppDefinition | null>(null);
+  const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null);
+
+  // Fetch background preference on mount and periodically
+  useEffect(() => {
+    if (!user) return;
+
+    const loadBackground = () => {
+      fetchSharedPreference(user.id, BACKGROUND_PREF_KEY)
+        .then((url) => setBackgroundUrl(url as string | null))
+        .catch((err) => console.error("Failed to load background:", err));
+    };
+
+    loadBackground();
+    const interval = setInterval(loadBackground, 3000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   const filteredApps = installedApps.filter(
     (a) => !FILTERED_BUNDLE_IDS.includes(a.bundleId)
@@ -47,7 +67,14 @@ export function Launcher() {
   };
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 flex flex-col">
+    <div
+      className={`fixed inset-0 flex flex-col bg-cover bg-center bg-no-repeat ${
+        !backgroundUrl
+          ? "bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500"
+          : ""
+      }`}
+      style={backgroundUrl ? { backgroundImage: `url(${backgroundUrl})` } : undefined}
+    >
       <div className="flex-1 overflow-auto p-6 pt-12">
         {loading ? (
           <div className="flex items-center justify-center h-full text-background">

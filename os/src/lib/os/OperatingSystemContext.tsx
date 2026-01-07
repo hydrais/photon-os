@@ -1,7 +1,9 @@
 import {
   createContext,
+  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type PropsWithChildren,
 } from "react";
@@ -11,6 +13,7 @@ import type {
   RunningAppInstance,
   OperatingSystemAPI,
   PhotonUser,
+  PreferenceValue,
 } from "@photon-os/sdk";
 import { useApps } from "./hooks/useApps";
 import { useAuth } from "../auth/AuthContext";
@@ -18,6 +21,14 @@ import { Spinner } from "@/components/ui/spinner";
 import * as pmrpc from "pm-rpc";
 import { InstallAppDrawer } from "@/components/system/install-app-drawer";
 import { UninstallAppDrawer } from "@/components/system/uninstall-app-drawer";
+import {
+  fetchSandboxedPreference,
+  setSandboxedPreference,
+  deleteSandboxedPreference,
+  fetchSharedPreference,
+  setSharedPreference,
+  deleteSharedPreference,
+} from "../supabase/preferences";
 
 export const LAUNCHER_APP: AppDefinition = {
   bundleId: "com.photon-os.launcher",
@@ -63,6 +74,9 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
     useState<AppDefinition | null>(null);
   const [multitasking, setMultitasking] = useState(false);
 
+  // Track the last message source for identifying calling apps
+  const lastMessageSourceRef = useRef<Window | null>(null);
+
   const { user } = useAuth();
 
   const {
@@ -75,7 +89,32 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
     closeApp,
     installApp,
     uninstallApp,
-  } = useApps();
+    isLoadingApps,
+  } = useApps(user?.id);
+
+  // Capture message source before pm-rpc processes it
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.source && event.source !== window) {
+        lastMessageSourceRef.current = event.source as Window;
+      }
+    };
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  // Identify which app sent the current RPC call
+  const identifyCallingApp = useCallback((): string | null => {
+    const source = lastMessageSourceRef.current;
+    if (!source) return null;
+
+    for (const [bundleId, iframe] of Object.entries(appIframeRefs)) {
+      if (iframe.contentWindow === source) {
+        return bundleId;
+      }
+    }
+    return null;
+  }, [appIframeRefs]);
 
   const api: OperatingSystemAPI = useMemo(
     () => ({
@@ -108,8 +147,42 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
             "User",
         };
       },
+
+      // Preferences API - Sandboxed (app-specific)
+      async prefs_getSandboxed(key: string): Promise<PreferenceValue> {
+        if (!user) throw new Error("Not authenticated");
+        const bundleId = identifyCallingApp();
+        if (!bundleId) throw new Error("Could not identify calling app");
+        return await fetchSandboxedPreference(user.id, bundleId, key);
+      },
+      async prefs_setSandboxed(key: string, value: PreferenceValue): Promise<void> {
+        if (!user) throw new Error("Not authenticated");
+        const bundleId = identifyCallingApp();
+        if (!bundleId) throw new Error("Could not identify calling app");
+        await setSandboxedPreference(user.id, bundleId, key, value);
+      },
+      async prefs_deleteSandboxed(key: string): Promise<void> {
+        if (!user) throw new Error("Not authenticated");
+        const bundleId = identifyCallingApp();
+        if (!bundleId) throw new Error("Could not identify calling app");
+        await deleteSandboxedPreference(user.id, bundleId, key);
+      },
+
+      // Preferences API - Shared (global)
+      async prefs_getShared(key: string): Promise<PreferenceValue> {
+        if (!user) throw new Error("Not authenticated");
+        return await fetchSharedPreference(user.id, key);
+      },
+      async prefs_setShared(key: string, value: PreferenceValue): Promise<void> {
+        if (!user) throw new Error("Not authenticated");
+        await setSharedPreference(user.id, key, value);
+      },
+      async prefs_deleteShared(key: string): Promise<void> {
+        if (!user) throw new Error("Not authenticated");
+        await deleteSharedPreference(user.id, key);
+      },
     }),
-    [installedApps, runningApps, user]
+    [installedApps, runningApps, user, identifyCallingApp]
   );
 
   useEffect(() => {
@@ -117,7 +190,7 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
     setApiLoading(false);
   }, [api]);
 
-  const loading = apiLoading;
+  const loading = apiLoading || isLoadingApps;
 
   return (
     <OperatingSystemContext.Provider

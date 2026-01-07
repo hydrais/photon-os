@@ -3,10 +3,15 @@ import type {
   AppDefinition,
   AppBundleId,
 } from "@photon-os/sdk";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { LAUNCHER_APP, SYSTEM_APPS } from "../OperatingSystemContext";
+import {
+  fetchInstalledApps,
+  insertInstalledApp,
+  deleteInstalledApp,
+} from "../../supabase/installedApps";
 
-export function useApps() {
+export function useApps(userId: string | undefined) {
   const [runningApps, setRunningApps] = useState<RunningAppInstance[]>([
     {
       definition: LAUNCHER_APP,
@@ -19,9 +24,43 @@ export function useApps() {
   const [installedApps, setInstalledApps] =
     useState<AppDefinition[]>(SYSTEM_APPS);
 
+  const [isLoadingApps, setIsLoadingApps] = useState(true);
+
   const [appIframeRefs, setAppIframeRefs] = useState<
     Record<AppBundleId, HTMLIFrameElement>
   >({});
+
+  // Load installed apps from Supabase when userId is available
+  useEffect(() => {
+    if (!userId) {
+      setIsLoadingApps(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function loadApps() {
+      setIsLoadingApps(true);
+      try {
+        const userApps = await fetchInstalledApps();
+        if (!cancelled) {
+          setInstalledApps([...SYSTEM_APPS, ...userApps]);
+        }
+      } catch (error) {
+        console.error("Failed to load installed apps:", error);
+      } finally {
+        if (!cancelled) {
+          setIsLoadingApps(false);
+        }
+      }
+    }
+
+    loadApps();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const setAppIframeRef = useCallback(
     (bundleId: AppBundleId, element: HTMLIFrameElement | null) => {
@@ -38,17 +77,64 @@ export function useApps() {
     []
   );
 
-  const installApp = (app: AppDefinition) => {
-    const alreadyInstalled = installedApps.some(
-      (a) => a.bundleId === app.bundleId
-    );
-    if (alreadyInstalled) return;
-    setInstalledApps((v) => [...v, app]);
-  };
+  const installApp = useCallback(
+    async (app: AppDefinition) => {
+      if (!userId) {
+        console.error("Cannot install app: no user ID");
+        return;
+      }
 
-  const uninstallApp = (app: AppDefinition) => {
-    setInstalledApps((v) => [...v.filter((a) => a.bundleId !== app.bundleId)]);
-  };
+      const alreadyInstalled = installedApps.some(
+        (a) => a.bundleId === app.bundleId
+      );
+      if (alreadyInstalled) return;
+
+      // Optimistic update
+      setInstalledApps((v) => [...v, app]);
+
+      try {
+        await insertInstalledApp(userId, app);
+      } catch (error) {
+        // Rollback on failure
+        setInstalledApps((v) => v.filter((a) => a.bundleId !== app.bundleId));
+        console.error("Failed to persist app installation:", error);
+      }
+    },
+    [userId, installedApps]
+  );
+
+  const uninstallApp = useCallback(
+    async (app: AppDefinition) => {
+      if (!userId) {
+        console.error("Cannot uninstall app: no user ID");
+        return;
+      }
+
+      // Prevent uninstalling system apps
+      const isSystemApp = SYSTEM_APPS.some(
+        (sa) => sa.bundleId === app.bundleId
+      );
+      if (isSystemApp) {
+        console.warn("Cannot uninstall system app:", app.bundleId);
+        return;
+      }
+
+      // Store for potential rollback
+      const previousApps = [...installedApps];
+
+      // Optimistic update
+      setInstalledApps((v) => v.filter((a) => a.bundleId !== app.bundleId));
+
+      try {
+        await deleteInstalledApp(userId, app.bundleId);
+      } catch (error) {
+        // Rollback on failure
+        setInstalledApps(previousApps);
+        console.error("Failed to persist app uninstallation:", error);
+      }
+    },
+    [userId, installedApps]
+  );
 
   const launchApp = (app: AppDefinition) => {
     const runningApp = runningApps.find(
@@ -112,5 +198,6 @@ export function useApps() {
     closeApp,
     installApp,
     uninstallApp,
+    isLoadingApps,
   };
 }

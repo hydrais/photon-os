@@ -1,4 +1,5 @@
 import { AppDefinition } from "./app";
+import { DeviceMessage, SendMessageResult, SLDevice } from "./devices";
 import { PreferenceValue } from "./preferences";
 import { SecondLifeAccount } from "./secondlife";
 import { PhotonUser } from "./user";
@@ -35,4 +36,15 @@ export type OperatingSystemAPI = {
   accounts_getLinkedSecondLifeAccounts: () => Promise<SecondLifeAccount[]>;
   accounts_unlinkSecondLifeAccount: (avatarUuid: string) => Promise<void>;
   accounts_generateLinkingCode: () => Promise<LinkingCode>;
+
+  // Second Life Devices API
+  devices_getRegistered: () => Promise<SLDevice[]>;
+  devices_sendMessage: (
+    deviceId: string,
+    type: string,
+    payload: Record<string, unknown>
+  ) => Promise<SendMessageResult>;
+  devices_unregister: (deviceId: string) => Promise<void>;
+  devices_subscribe: (callback: (message: DeviceMessage) => void) => Promise<void>;
+  devices_unsubscribe: () => Promise<void>;
 };

@@ -16,6 +16,9 @@ import type {
   PreferenceValue,
   SecondLifeAccount,
   LinkingCode,
+  SLDevice,
+  SendMessageResult,
+  DeviceMessage,
 } from "@photon-os/sdk";
 import { useApps } from "./hooks/useApps";
 import { useAuth } from "../auth/AuthContext";
@@ -36,6 +39,13 @@ import {
   deleteLinkedSecondLifeAccount,
 } from "../supabase/linkedSecondLifeAccounts";
 import { createLinkingCode } from "../supabase/linkingCodes";
+import {
+  fetchRegisteredDevices,
+  deleteRegisteredDevice,
+  sendMessageToDevice,
+  subscribeToDeviceMessages,
+  unsubscribeFromDeviceMessages,
+} from "../supabase/slDevices";
 
 export const LAUNCHER_APP: AppDefinition = {
   bundleId: "com.photon-os.launcher",
@@ -201,6 +211,33 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
       async accounts_generateLinkingCode(): Promise<LinkingCode> {
         if (!user) throw new Error("Not authenticated");
         return await createLinkingCode(user.id);
+      },
+
+      // Second Life Devices API
+      async devices_getRegistered(): Promise<SLDevice[]> {
+        if (!user) throw new Error("Not authenticated");
+        return await fetchRegisteredDevices(user.id);
+      },
+      async devices_sendMessage(
+        deviceId: string,
+        type: string,
+        payload: Record<string, unknown>
+      ): Promise<SendMessageResult> {
+        if (!user) throw new Error("Not authenticated");
+        return await sendMessageToDevice(deviceId, type, payload);
+      },
+      async devices_unregister(deviceId: string): Promise<void> {
+        if (!user) throw new Error("Not authenticated");
+        await deleteRegisteredDevice(user.id, deviceId);
+      },
+      async devices_subscribe(
+        callback: (message: DeviceMessage) => void
+      ): Promise<void> {
+        if (!user) throw new Error("Not authenticated");
+        subscribeToDeviceMessages(user.id, callback);
+      },
+      async devices_unsubscribe(): Promise<void> {
+        unsubscribeFromDeviceMessages();
       },
     }),
     [installedApps, runningApps, user, identifyCallingApp]

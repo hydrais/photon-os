@@ -1,6 +1,6 @@
 {
   "name": "@photon-os/react",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "React bindings for Photon OS",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",

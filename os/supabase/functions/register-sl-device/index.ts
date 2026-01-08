@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-secondlife-owner-key, x-secondlife-owner-name",
+    "authorization, x-client-info, apikey, content-type, x-secondlife-owner-key, x-secondlife-owner-name, x-secondlife-object-key, x-secondlife-object-name, x-secondlife-region",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -23,9 +23,11 @@ Deno.serve(async (req) => {
   try {
     // Extract Second Life headers
     const ownerKey = req.headers.get("x-secondlife-owner-key");
-    const ownerName = req.headers.get("x-secondlife-owner-name");
+    const objectKey = req.headers.get("x-secondlife-object-key");
+    const objectName = req.headers.get("x-secondlife-object-name");
+    const regionName = req.headers.get("x-secondlife-region");
 
-    if (!ownerKey || !ownerName) {
+    if (!ownerKey || !objectKey || !objectName) {
       return new Response(
         JSON.stringify({
           success: false,
@@ -40,11 +42,11 @@ Deno.serve(async (req) => {
 
     // Parse request body
     const body = await req.json();
-    const { code } = body;
+    const { callback_url } = body;
 
-    if (!code) {
+    if (!callback_url) {
       return new Response(
-        JSON.stringify({ success: false, error: "Missing linking code" }),
+        JSON.stringify({ success: false, error: "Missing callback_url in request body" }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -57,82 +59,59 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Find the linking code
-    const { data: linkingCode, error: codeError } = await supabase
-      .from("sl_linking_codes")
-      .select("*")
-      .eq("code", code)
-      .is("used_at", null)
-      .gt("expires_at", new Date().toISOString())
-      .single();
-
-    if (codeError || !linkingCode) {
-      return new Response(
-        JSON.stringify({ success: false, error: "Invalid or expired linking code" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Check if this SL account is already linked to any Photon account
-    const { data: existingLink } = await supabase
+    // Find the linked SL account by owner key
+    const { data: linkedAccounts, error: accountError } = await supabase
       .from("user_linked_sl_accounts")
-      .select("id")
+      .select("id, user_id")
       .eq("avatar_uuid", ownerKey)
       .limit(1);
 
-    if (existingLink && existingLink.length > 0) {
+    const linkedAccount = linkedAccounts?.[0];
+
+    if (accountError || !linkedAccount) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "This Second Life account is already linked to a Photon account.",
+          error: "Second Life account not linked to any Photon account. Please link your account first.",
         }),
         {
-          status: 400,
+          status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
     }
 
-    // Insert the linked account
-    const { error: insertError } = await supabase
-      .from("user_linked_sl_accounts")
-      .insert({
-        user_id: linkingCode.user_id,
-        avatar_uuid: ownerKey,
-        avatar_name: ownerName,
-      });
+    // Upsert the device registration
+    const { data: device, error: upsertError } = await supabase
+      .from("sl_registered_devices")
+      .upsert(
+        {
+          user_id: linkedAccount.user_id,
+          sl_account_id: linkedAccount.id,
+          object_key: objectKey,
+          object_name: objectName,
+          callback_url: callback_url,
+          region_name: regionName,
+          last_heartbeat_at: new Date().toISOString(),
+          is_online: true,
+        },
+        {
+          onConflict: "user_id,object_key",
+        }
+      )
+      .select("id")
+      .single();
 
-    if (insertError) {
-      // Check for duplicate
-      if (insertError.code === "23505") {
-        return new Response(
-          JSON.stringify({
-            success: false,
-            error: "This Second Life account is already linked to your Photon account",
-          }),
-          {
-            status: 400,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      throw insertError;
+    if (upsertError) {
+      console.error("Error registering device:", upsertError);
+      throw upsertError;
     }
-
-    // Mark the code as used
-    await supabase
-      .from("sl_linking_codes")
-      .update({ used_at: new Date().toISOString() })
-      .eq("id", linkingCode.id);
 
     return new Response(
       JSON.stringify({
         success: true,
-        avatarName: ownerName,
-        message: `Successfully linked ${ownerName} to your Photon account`,
+        device_id: device.id,
+        message: `Device "${objectName}" registered successfully`,
       }),
       {
         status: 200,
@@ -140,7 +119,7 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Error linking account:", error);
+    console.error("Error registering device:", error);
     return new Response(
       JSON.stringify({ success: false, error: "Internal server error" }),
       {

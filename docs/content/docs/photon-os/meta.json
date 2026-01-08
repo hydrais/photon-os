@@ -1,5 +1,6 @@
 {
   "title": "Photon OS",
   "description": "Documentation for the Photon OS SDK and platform.",
-  "root": true
+  "root": true,
+  "pages": ["index", "using-photon-os", "creating-apps", "photon-bridge"]
 }

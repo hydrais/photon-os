@@ -3,17 +3,53 @@ title: Introduction
 description: Documentation for the Photon OS SDK and platform.
 ---
 
-Photon OS is a browser-based operating system framework. Apps run in sandboxed iframes and communicate with the OS shell via PostMessage RPC.
+Photon OS is a browser based operating system that is designed to be a "smart device" platform for Second Life. Photon OS is intended to be accessible via any web browser, as well as Shared Media prims in Second Life. No matter how a user accesses Photon OS, their account and smart Second Life devices are accessible and kept in sync.
 
 <Callout type="warn" title="Early Stage Project">
 This project is in very early development. APIs may change without notice, features may be incomplete, and documentation may contain errors.
 
-These docs are AI-generated and have not been heavily tested. Use at your own risk and please report any issues you encounter.
+These docs are partially AI-generated and have not been heavily tested. Use at your own risk and please report any issues you encounter.
+
 </Callout>
 
-## Getting Started
+## Key Components
+
+- **Photon OS** – The core of the Photon ecosystem, a web based "operating system" which handles connectivity with Second Life and makes it available to Photon OS Apps via the Photon OS SDK.
+- **Photon OS SDK** – A series of libraries distributed via NPM that enable connectivity between apps, Photon OS, and the services it provides.
+- **Photon Apps** – A Photon App is any web app that integrates with Photon OS through the Photon OS SDK. Apps are ran by Photon OS in a "sandboxed" environment using `<iframe>` elements.
+- **Photon Bridge** – The two-way, real time messaging bridge between Photon OS and scripts in Second Life. Photon Bridge supports RPC to and from any script in Second Life with sub-section latency.
+- **Photon HUD** – The Shared Media HUD which is the default way to access Photon OS in Second Life. Users can use the HUD or their web browser, including on their phone or tablet.
+- **Photon Tool** – The Photon platform started over a decade ago with a traditional Second Life multitool with over 200 features. We've modernized that tool and made it accessible through Photon OS as an example of Photon OS to Second Life interactivity.
+
+## Get Started
 
 <Cards>
-  <Card title="Creating Apps" href="/docs/photon-os/creating-apps" />
-  <Card title="Second Life Devices" href="/docs/photon-os/sl-devices" />
+  <Card
+    title="Start Using Photon OS"
+    href="/docs/photon-os/using-photon-os/introduction"
+  >
+    Create a Photon account and access Photon OS through the Photon HUD or your
+    browser.
+  </Card>
+  <Card
+    title="Create Apps for Photon OS"
+    href="/docs/photon-os/creating-apps/introduction"
+  >
+    Learn best practices for building a Photon OS web app using the Photon OS
+    SDK.
+  </Card>
+  <Card
+    title="Second Life Connectivity with Photon Bridge"
+    href="/docs/photon-os/photon-bridge/introduction"
+  >
+    Add smart device capability to your Second Life creations using two-way RPC
+    with Photon Bridge.
+  </Card>
+  <Card
+    title="Learn more about the Photon Tool"
+    href="/docs/photon-tool/user-guide"
+  >
+    Get more info about the featured packed multitool that started it all – The
+    Photon Tool.
+  </Card>
 </Cards>

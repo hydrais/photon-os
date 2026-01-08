@@ -1,5 +1,5 @@
 ---
-title: Creating Apps
+title: Get Started Creating Apps
 description: Build apps for Photon OS using the SDK
 ---
 
@@ -40,13 +40,13 @@ The SDK automatically connects to the parent Photon OS shell via PostMessage.
 
 The `OS` instance provides access to several managers:
 
-| Manager | Purpose |
-|---------|---------|
-| `os.user` | Get current user information |
-| `os.apps` | App lifecycle (get installed, launch, install, uninstall) |
-| `os.prefs` | Store preferences (sandboxed per-app or shared) |
-| `os.accounts` | Second Life account linking |
-| `os.devices` | Communicate with Second Life devices |
+| Manager       | Purpose                                                   |
+| ------------- | --------------------------------------------------------- |
+| `os.user`     | Get current user information                              |
+| `os.apps`     | App lifecycle (get installed, launch, install, uninstall) |
+| `os.prefs`    | Store preferences (sandboxed per-app or shared)           |
+| `os.accounts` | Second Life account linking                               |
+| `os.devices`  | Communicate with Second Life devices                      |
 
 ### Getting the Current User
 
@@ -117,12 +117,12 @@ function MyComponent() {
 
 When installing an app, you need to provide:
 
-| Field | Description | Example |
-|-------|-------------|---------|
-| `bundleId` | Unique identifier for your app | `com.mycompany.myapp` |
-| `name` | Display name shown to users | `My App` |
-| `author` | Developer or company name | `My Company` |
-| `url` | URL where your app is hosted | `https://example.com/app` |
+| Field      | Description                    | Example                   |
+| ---------- | ------------------------------ | ------------------------- |
+| `bundleId` | Unique identifier for your app | `com.mycompany.myapp`     |
+| `name`     | Display name shown to users    | `My App`                  |
+| `author`   | Developer or company name      | `My Company`              |
+| `url`      | URL where your app is hosted   | `https://example.com/app` |
 
 ## Installing Your App
 

@@ -58,16 +58,6 @@ export function Launcher() {
     if (result.error) alert(result.error.message);
   };
 
-  const installApp = async () => {
-    const os = new OS();
-    await os.apps.requestAppInstall({
-      author: "Jesse Dunlap",
-      name: "Avatar Manager",
-      bundleId: "com.photon-os.test",
-      url: "/__test",
-    });
-  };
-
   const uninstallApp = async (app: AppDefinition) => {
     const os = new OS();
     await os.apps.requestAppUninstall(app);
@@ -80,7 +70,9 @@ export function Launcher() {
           ? "bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500"
           : ""
       }`}
-      style={backgroundUrl ? { backgroundImage: `url(${backgroundUrl})` } : undefined}
+      style={
+        backgroundUrl ? { backgroundImage: `url(${backgroundUrl})` } : undefined
+      }
     >
       <div className="flex-1 overflow-auto p-6 pt-12">
         {loading ? (
@@ -106,8 +98,6 @@ export function Launcher() {
                 canBeUninstalled={!SYSTEM_APP_BUNDLE_IDS.includes(app.bundleId)}
               />
             ))}
-
-            <button onClick={() => installApp()}>Install</button>
           </div>
         )}
       </div>

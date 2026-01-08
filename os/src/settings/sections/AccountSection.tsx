@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/auth/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus, Loader2, Check } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -14,6 +14,7 @@ import {
   fetchLinkedSecondLifeAccounts,
   deleteLinkedSecondLifeAccount,
 } from "@/lib/supabase/linkedSecondLifeAccounts";
+import { createLinkingCode } from "@/lib/supabase/linkingCodes";
 import type { SecondLifeAccount as SecondLifeAccountType } from "@photon-os/sdk";
 
 function SecondLifeAccountItem({
@@ -56,35 +57,111 @@ export function AccountSection() {
   const [accountToUnlink, setAccountToUnlink] =
     useState<SecondLifeAccountType | null>(null);
 
+  // Linking code state
+  const [linkingCode, setLinkingCode] = useState<string | null>(null);
+  const [codeExpiresAt, setCodeExpiresAt] = useState<string | null>(null);
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+  const [linkSuccess, setLinkSuccess] = useState<string | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const initialAccountCountRef = useRef<number>(0);
+
   const displayName =
     user?.user_metadata?.display_name || user?.email?.split("@")[0] || "User";
+
+  const loadAccounts = useCallback(async () => {
+    if (!user) return [];
+    try {
+      const accounts = await fetchLinkedSecondLifeAccounts(user.id);
+      return accounts;
+    } catch (error) {
+      console.error("Failed to load linked accounts:", error);
+      return [];
+    }
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
 
     let cancelled = false;
 
-    async function loadAccounts() {
-      try {
-        const accounts = await fetchLinkedSecondLifeAccounts(user!.id);
-        if (!cancelled) {
-          setLinkedAccounts(accounts);
-        }
-      } catch (error) {
-        console.error("Failed to load linked accounts:", error);
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
+    async function initialLoad() {
+      const accounts = await loadAccounts();
+      if (!cancelled) {
+        setLinkedAccounts(accounts);
+        setIsLoading(false);
       }
     }
 
-    loadAccounts();
+    initialLoad();
 
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, loadAccounts]);
+
+  // Generate linking code when drawer opens
+  const handleOpenLinkDrawer = async () => {
+    setShowLinkDrawer(true);
+    setLinkSuccess(null);
+    setIsGeneratingCode(true);
+    initialAccountCountRef.current = linkedAccounts.length;
+
+    try {
+      if (!user) return;
+      const { code, expiresAt } = await createLinkingCode(user.id);
+      setLinkingCode(code);
+      setCodeExpiresAt(expiresAt);
+    } catch (error) {
+      console.error("Failed to generate linking code:", error);
+    } finally {
+      setIsGeneratingCode(false);
+    }
+  };
+
+  // Start polling when we have a code
+  useEffect(() => {
+    if (!showLinkDrawer || !linkingCode || linkSuccess) {
+      return;
+    }
+
+    // Poll every 3 seconds for new accounts
+    pollingRef.current = setInterval(async () => {
+      const accounts = await loadAccounts();
+      if (accounts.length > initialAccountCountRef.current) {
+        // Find the new account
+        const newAccount = accounts.find(
+          (acc) => !linkedAccounts.some((la) => la.avatarUuid === acc.avatarUuid)
+        );
+        if (newAccount) {
+          setLinkSuccess(newAccount.avatarName);
+          setLinkedAccounts(accounts);
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
+        }
+      }
+    }, 3000);
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, [showLinkDrawer, linkingCode, linkSuccess, loadAccounts, linkedAccounts]);
+
+  // Clean up when drawer closes
+  const handleCloseLinkDrawer = () => {
+    setShowLinkDrawer(false);
+    setLinkingCode(null);
+    setCodeExpiresAt(null);
+    setLinkSuccess(null);
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  };
 
   const handleUnlink = async () => {
     if (!user || !accountToUnlink) return;
@@ -103,6 +180,16 @@ export function AccountSection() {
     } finally {
       setUnlinkingId(null);
     }
+  };
+
+  // Calculate time remaining for code
+  const getTimeRemaining = () => {
+    if (!codeExpiresAt) return "";
+    const remaining = new Date(codeExpiresAt).getTime() - Date.now();
+    if (remaining <= 0) return "Expired";
+    const minutes = Math.floor(remaining / 60000);
+    const seconds = Math.floor((remaining % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
   return (
@@ -150,52 +237,92 @@ export function AccountSection() {
         )}
       </div>
 
-      <Button variant="secondary" onClick={() => setShowLinkDrawer(true)}>
+      <Button variant="secondary" onClick={handleOpenLinkDrawer}>
         <Plus /> Link a Second Life Account
       </Button>
 
-      <Drawer open={showLinkDrawer} onOpenChange={setShowLinkDrawer}>
+      <Drawer open={showLinkDrawer} onOpenChange={(open) => !open && handleCloseLinkDrawer()} dismissible={false}>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>Link a Second Life Account</DrawerTitle>
+            <DrawerTitle>
+              {linkSuccess ? "Account Linked!" : "Link a Second Life Account"}
+            </DrawerTitle>
             <DrawerDescription>
-              To link your Second Life account, you'll need the Photon Tool
-              in-world.
+              {linkSuccess
+                ? `Successfully linked ${linkSuccess} to your Photon account.`
+                : "Enter this code in your Photon Tool in Second Life."}
             </DrawerDescription>
           </DrawerHeader>
           <div className="p-4 flex flex-col gap-4">
-            <div className="flex flex-col gap-3">
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-medium">
-                  1
+            {linkSuccess ? (
+              <div className="flex flex-col items-center gap-4 py-4">
+                <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center">
+                  <Check className="w-8 h-8 text-green-500" />
                 </div>
-                <p className="text-sm">
-                  Get the Photon Tool from the Second Life Marketplace.
+                <p className="text-center text-muted-foreground">
+                  Your Second Life account is now linked. Items owned by{" "}
+                  {linkSuccess} can now communicate with your Photon Tool.
                 </p>
               </div>
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-medium">
-                  2
-                </div>
-                <p className="text-sm">
-                  Rez the Photon Tool in-world and touch it to begin the linking
-                  process.
-                </p>
+            ) : isGeneratingCode ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="animate-spin" />
               </div>
-              <div className="flex gap-3">
-                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-medium">
-                  3
+            ) : linkingCode ? (
+              <>
+                <div className="flex flex-col items-center gap-2 py-4">
+                  <p className="text-sm text-muted-foreground">Your linking code:</p>
+                  <div className="text-4xl font-mono font-bold tracking-widest">
+                    {linkingCode}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Expires in {getTimeRemaining()}
+                  </p>
                 </div>
-                <p className="text-sm">
-                  Follow the instructions provided by the tool to complete the
-                  link.
-                </p>
-              </div>
-            </div>
+                <div className="flex flex-col gap-3">
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-medium">
+                      1
+                    </div>
+                    <p className="text-sm">
+                      Attach your Photon Tool in Second Life (if not already attached).
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-medium">
+                      2
+                    </div>
+                    <p className="text-sm">
+                      Say "/10 link" in Second Life to start the linking process.
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-medium">
+                      3
+                    </div>
+                    <p className="text-sm">
+                      When prompted, enter the code above.
+                    </p>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-medium">
+                      4
+                    </div>
+                    <p className="text-sm">
+                      Wait for confirmation. This page will update automatically.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="animate-spin w-4 h-4" />
+                  Waiting for link...
+                </div>
+              </>
+            ) : null}
           </div>
           <DrawerFooter>
-            <Button variant="outline" onClick={() => setShowLinkDrawer(false)}>
-              Close
+            <Button variant="outline" onClick={handleCloseLinkDrawer}>
+              {linkSuccess ? "Done" : "Cancel"}
             </Button>
           </DrawerFooter>
         </DrawerContent>

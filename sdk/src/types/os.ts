@@ -9,6 +9,11 @@ export type AppLaunchResult = {
   app: AppDefinition;
 };
 
+export type LinkingCode = {
+  code: string;
+  expiresAt: string;
+};
+
 export type OperatingSystemAPI = {
   system_homeButton: () => Promise<void>;
   apps_getInstalledApps: () => Promise<AppDefinition[]>;
@@ -29,4 +34,5 @@ export type OperatingSystemAPI = {
   // Second Life Accounts API
   accounts_getLinkedSecondLifeAccounts: () => Promise<SecondLifeAccount[]>;
   accounts_unlinkSecondLifeAccount: (avatarUuid: string) => Promise<void>;
+  accounts_generateLinkingCode: () => Promise<LinkingCode>;
 };

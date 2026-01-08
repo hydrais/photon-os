@@ -1,0 +1,4 @@
+# Disable JWT verification for this function
+# This endpoint is called from Second Life which cannot provide a valid JWT
+# Security is handled via the linking code mechanism instead
+verify_jwt = false

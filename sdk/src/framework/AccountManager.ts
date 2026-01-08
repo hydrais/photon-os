@@ -1,3 +1,4 @@
+import type { LinkingCode } from "../types/os";
 import type { SecondLifeAccount } from "../types/secondlife";
 import type { OS } from "./OS";
 
@@ -18,5 +19,11 @@ export class AccountManager {
   public async unlinkSecondLifeAccount(avatarUuid: string): Promise<void> {
     const api = await this.os.getRPCAPI();
     await api.accounts_unlinkSecondLifeAccount(avatarUuid);
+  }
+
+  /** Generate a linking code for connecting a Second Life account */
+  public async generateLinkingCode(): Promise<LinkingCode> {
+    const api = await this.os.getRPCAPI();
+    return await api.accounts_generateLinkingCode();
   }
 }

@@ -15,6 +15,7 @@ import type {
   PhotonUser,
   PreferenceValue,
   SecondLifeAccount,
+  LinkingCode,
 } from "@photon-os/sdk";
 import { useApps } from "./hooks/useApps";
 import { useAuth } from "../auth/AuthContext";
@@ -34,6 +35,7 @@ import {
   fetchLinkedSecondLifeAccounts,
   deleteLinkedSecondLifeAccount,
 } from "../supabase/linkedSecondLifeAccounts";
+import { createLinkingCode } from "../supabase/linkingCodes";
 
 export const LAUNCHER_APP: AppDefinition = {
   bundleId: "com.photon-os.launcher",
@@ -195,6 +197,10 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
       async accounts_unlinkSecondLifeAccount(avatarUuid: string): Promise<void> {
         if (!user) throw new Error("Not authenticated");
         await deleteLinkedSecondLifeAccount(user.id, avatarUuid);
+      },
+      async accounts_generateLinkingCode(): Promise<LinkingCode> {
+        if (!user) throw new Error("Not authenticated");
+        return await createLinkingCode(user.id);
       },
     }),
     [installedApps, runningApps, user, identifyCallingApp]

@@ -38,7 +38,8 @@ function DeviceItem({
         <p className="font-medium text-lg truncate">{device.objectName}</p>
         <p className="text-xs text-muted-foreground">
           {device.regionName && <span>{device.regionName} &middot; </span>}
-          Last seen {formatDistanceToNow(device.lastHeartbeatAt, { addSuffix: true })}
+          Last seen{" "}
+          {formatDistanceToNow(device.lastHeartbeatAt, { addSuffix: true })}
         </p>
       </div>
       <Button
@@ -115,8 +116,7 @@ export function ConnectedDevicesSection() {
       <div>
         <h2 className="text-lg font-semibold">Connected Devices</h2>
         <p className="text-sm text-muted-foreground">
-          Second Life objects that are registered to communicate with your
-          Photon account.
+          Second Life objects that are connected to your Photon account.
         </p>
       </div>
 
@@ -126,9 +126,8 @@ export function ConnectedDevicesSection() {
             <Loader2 className="animate-spin" />
           </div>
         ) : devices.length === 0 ? (
-          <div className="p-4 text-center text-muted-foreground">
-            No devices connected yet. Drop a PhotonDevice script into an object
-            in Second Life to get started.
+          <div className="p-4 text-center text-muted-foreground text-sm">
+            No devices connected yet.
           </div>
         ) : (
           devices.map((device) => (
@@ -149,7 +148,9 @@ export function ConnectedDevicesSection() {
         <DrawerContent>
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
-              <DrawerTitle>Remove {deviceToUnregister?.objectName}?</DrawerTitle>
+              <DrawerTitle>
+                Remove {deviceToUnregister?.objectName}?
+              </DrawerTitle>
               <DrawerDescription>
                 This device will no longer be able to send or receive messages
                 through your Photon account. You can re-register it at any time
@@ -157,7 +158,11 @@ export function ConnectedDevicesSection() {
               </DrawerDescription>
             </DrawerHeader>
             <DrawerFooter>
-              <Button onClick={handleUnregister} variant="destructive" size="lg">
+              <Button
+                onClick={handleUnregister}
+                variant="destructive"
+                size="lg"
+              >
                 Remove Device
               </Button>
               <Button

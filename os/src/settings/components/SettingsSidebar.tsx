@@ -24,7 +24,7 @@ export function SettingsSidebar({
             key={section.id}
             onClick={() => onSectionSelect(section.id)}
             className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all",
+              "flex items-center gap-3 px-3 py-2.5 rounded-full text-left transition-all",
               "hover:bg-muted focus-visible:ring-[3px] focus-visible:ring-ring/50 focus-visible:outline-none",
               isActive
                 ? "bg-primary/10 text-primary font-medium"

@@ -33,8 +33,8 @@ export function InstallAppDrawer({
             <DrawerDescription>
               {type === "permanent"
                 ? `An app called ${app?.name} by ${app?.author} is requesting to be
-              installed on your Photon Tool. Only install apps you trust.`
-                : `An app called ${app?.name} by ${app?.author} is requesting to temporarily run on your Photon Tool to enhance your 
+              installed on your device. Only install apps you trust.`
+                : `An app called ${app?.name} by ${app?.author} is requesting to temporarily run on your device to enhance your 
               experience in this location. Only run apps you trust.`}
             </DrawerDescription>
           </DrawerHeader>

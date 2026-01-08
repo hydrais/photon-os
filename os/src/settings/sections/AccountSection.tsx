@@ -130,7 +130,8 @@ export function AccountSection() {
       if (accounts.length > initialAccountCountRef.current) {
         // Find the new account
         const newAccount = accounts.find(
-          (acc) => !linkedAccounts.some((la) => la.avatarUuid === acc.avatarUuid)
+          (acc) =>
+            !linkedAccounts.some((la) => la.avatarUuid === acc.avatarUuid)
         );
         if (newAccount) {
           setLinkSuccess(newAccount.avatarName);
@@ -212,7 +213,7 @@ export function AccountSection() {
         <h2 className="text-lg font-semibold">Second Life Accounts</h2>
         <p className="text-sm text-muted-foreground">
           Linking a Second Life account enables items you own in Second Life to
-          communicate with your Photon Tool.
+          communicate with Photon OS.
         </p>
       </div>
 
@@ -241,7 +242,11 @@ export function AccountSection() {
         <Plus /> Link a Second Life Account
       </Button>
 
-      <Drawer open={showLinkDrawer} onOpenChange={(open) => !open && handleCloseLinkDrawer()} dismissible={false}>
+      <Drawer
+        open={showLinkDrawer}
+        onOpenChange={(open) => !open && handleCloseLinkDrawer()}
+        dismissible={false}
+      >
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>
@@ -250,7 +255,7 @@ export function AccountSection() {
             <DrawerDescription>
               {linkSuccess
                 ? `Successfully linked ${linkSuccess} to your Photon account.`
-                : "Enter this code in your Photon Tool in Second Life."}
+                : "Enter this code in your Photon HUD in Second Life."}
             </DrawerDescription>
           </DrawerHeader>
           <div className="p-4 flex flex-col gap-4">
@@ -261,7 +266,7 @@ export function AccountSection() {
                 </div>
                 <p className="text-center text-muted-foreground">
                   Your Second Life account is now linked. Items owned by{" "}
-                  {linkSuccess} can now communicate with your Photon Tool.
+                  {linkSuccess} can now communicate with Photon OS.
                 </p>
               </div>
             ) : isGeneratingCode ? (
@@ -271,7 +276,9 @@ export function AccountSection() {
             ) : linkingCode ? (
               <>
                 <div className="flex flex-col items-center gap-2 py-4">
-                  <p className="text-sm text-muted-foreground">Your linking code:</p>
+                  <p className="text-sm text-muted-foreground">
+                    Your linking code:
+                  </p>
                   <div className="text-4xl font-mono font-bold tracking-widest">
                     {linkingCode}
                   </div>
@@ -285,7 +292,8 @@ export function AccountSection() {
                       1
                     </div>
                     <p className="text-sm">
-                      Attach your Photon Tool in Second Life (if not already attached).
+                      Attach your Photon HUD in Second Life (if not already
+                      attached).
                     </p>
                   </div>
                   <div className="flex gap-3">
@@ -293,7 +301,8 @@ export function AccountSection() {
                       2
                     </div>
                     <p className="text-sm">
-                      Say "/10 link" in Second Life to start the linking process.
+                      Say "/10 link" in Second Life to start the linking
+                      process.
                     </p>
                   </div>
                   <div className="flex gap-3">
@@ -309,7 +318,8 @@ export function AccountSection() {
                       4
                     </div>
                     <p className="text-sm">
-                      Wait for confirmation. This page will update automatically.
+                      Wait for confirmation. This page will update
+                      automatically.
                     </p>
                   </div>
                 </div>
@@ -338,7 +348,7 @@ export function AccountSection() {
               <DrawerTitle>Unlink {accountToUnlink?.avatarName}?</DrawerTitle>
               <DrawerDescription>
                 Items owned by this Second Life account will no longer be able
-                to communicate with your Photon Tool.
+                to communicate with your device.
               </DrawerDescription>
             </DrawerHeader>
             <DrawerFooter>

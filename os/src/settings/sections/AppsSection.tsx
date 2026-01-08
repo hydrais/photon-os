@@ -15,7 +15,10 @@ import {
 import { Trash2, Plus } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
-const SYSTEM_BUNDLE_IDS = ["com.photon-os.launcher", "com.photon-os.settings"];
+const SYSTEM_BUNDLE_IDS = [
+  "com.hydrais.photon.launcher",
+  "com.hydrais.photon.settings",
+];
 
 export function AppsSection() {
   const { installedApps, loading, refresh } = useInstalledApps();

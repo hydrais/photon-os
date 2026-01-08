@@ -48,7 +48,7 @@ import {
 } from "../supabase/slDevices";
 
 export const LAUNCHER_APP: AppDefinition = {
-  bundleId: "com.photon-os.launcher",
+  bundleId: "com.hydrais.photon.launcher",
   author: "Photon OS",
   name: "Launcher",
   url: "/__launcher",
@@ -57,7 +57,7 @@ export const LAUNCHER_APP: AppDefinition = {
 export const SYSTEM_APPS: AppDefinition[] = [
   LAUNCHER_APP,
   {
-    bundleId: "com.photon-os.settings",
+    bundleId: "com.hydrais.photon.settings",
     author: "Photon OS",
     name: "Settings",
     url: "/__settings",
@@ -172,7 +172,10 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
         if (!bundleId) throw new Error("Could not identify calling app");
         return await fetchSandboxedPreference(user.id, bundleId, key);
       },
-      async prefs_setSandboxed(key: string, value: PreferenceValue): Promise<void> {
+      async prefs_setSandboxed(
+        key: string,
+        value: PreferenceValue
+      ): Promise<void> {
         if (!user) throw new Error("Not authenticated");
         const bundleId = identifyCallingApp();
         if (!bundleId) throw new Error("Could not identify calling app");
@@ -190,7 +193,10 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
         if (!user) throw new Error("Not authenticated");
         return await fetchSharedPreference(user.id, key);
       },
-      async prefs_setShared(key: string, value: PreferenceValue): Promise<void> {
+      async prefs_setShared(
+        key: string,
+        value: PreferenceValue
+      ): Promise<void> {
         if (!user) throw new Error("Not authenticated");
         await setSharedPreference(user.id, key, value);
       },
@@ -200,11 +206,15 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
       },
 
       // Second Life Accounts API
-      async accounts_getLinkedSecondLifeAccounts(): Promise<SecondLifeAccount[]> {
+      async accounts_getLinkedSecondLifeAccounts(): Promise<
+        SecondLifeAccount[]
+      > {
         if (!user) throw new Error("Not authenticated");
         return await fetchLinkedSecondLifeAccounts(user.id);
       },
-      async accounts_unlinkSecondLifeAccount(avatarUuid: string): Promise<void> {
+      async accounts_unlinkSecondLifeAccount(
+        avatarUuid: string
+      ): Promise<void> {
         if (!user) throw new Error("Not authenticated");
         await deleteLinkedSecondLifeAccount(user.id, avatarUuid);
       },

@@ -43,7 +43,7 @@ integer HEARTBEAT_INTERVAL = 300;  // 5 minutes
 // ===================
 // State Variables
 // ===================
-key gCallbackUrl = NULL_KEY;
+string gCallbackUrl = "";
 string gDeviceId = "";
 integer gRegistered = FALSE;
 
@@ -62,7 +62,7 @@ broadcast(integer channel, string str, key id)
 
 requestRegistration()
 {
-    if (gCallbackUrl == NULL_KEY)
+    if (gCallbackUrl == "")
     {
         // Request URL first - registration will happen when we get it
         llRequestURL();
@@ -82,7 +82,7 @@ requestRegistration()
 
 sendHeartbeat()
 {
-    if (gCallbackUrl == NULL_KEY) return;
+    if (gCallbackUrl == "") return;
 
     string body = llList2Json(JSON_OBJECT, [
         "callback_url", (string)gCallbackUrl
@@ -137,7 +137,7 @@ default
     on_rez(integer param)
     {
         // Reset state when rezzed - will auto-register when URL is granted
-        gCallbackUrl = NULL_KEY;
+        gCallbackUrl = "";
         gRegistered = FALSE;
         gDeviceId = "";
         llSetTimerEvent(0.0);
@@ -150,7 +150,7 @@ default
         if (change & CHANGED_REGION)
         {
             // URL is invalid after region change
-            gCallbackUrl = NULL_KEY;
+            gCallbackUrl = "";
             markOffline();
             llRequestURL();
         }
@@ -168,7 +168,8 @@ default
     {
         if (method == URL_REQUEST_GRANTED)
         {
-            gCallbackUrl = id;
+            // The actual URL is in the body parameter, id is just a handle
+            gCallbackUrl = body;
 
             // Auto-register when we get a URL
             requestRegistration();

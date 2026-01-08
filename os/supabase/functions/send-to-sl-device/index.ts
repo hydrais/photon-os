@@ -93,6 +93,8 @@ Deno.serve(async (req) => {
 
     // Send HTTP request to the device's callback URL
     try {
+      console.log("Sending to device:", { callback_url: device.callback_url, type, payload });
+
       const response = await fetch(device.callback_url, {
         method: "POST",
         headers: {
@@ -103,6 +105,9 @@ Deno.serve(async (req) => {
           payload: payload || {},
         }),
       });
+
+      const responseText = await response.text();
+      console.log("Device response:", { status: response.status, body: responseText });
 
       if (!response.ok) {
         // Mark device as offline if we can't reach it
@@ -135,6 +140,8 @@ Deno.serve(async (req) => {
         }
       );
     } catch (fetchError) {
+      console.error("Fetch error:", fetchError);
+
       // Mark device as offline if we can't reach it
       await supabase
         .from("sl_registered_devices")
@@ -144,7 +151,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           success: false,
-          error: "Failed to reach device",
+          error: `Failed to reach device: ${fetchError instanceof Error ? fetchError.message : "Unknown error"}`,
           device_offline: true,
         }),
         {

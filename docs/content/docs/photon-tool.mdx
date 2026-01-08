@@ -1,0 +1,678 @@
+---
+title: Photon Tool User Guide
+description: The Photon Tool combines powerful functionality and elegant design to enhance your Second Life experience.
+---
+
+## Key Targeting System
+
+Most commands (except beacon, scan, and land) use an intelligent key finding system:
+
+- **Partial name**: Works if the target is within 96 meters of you
+- **Full name**: Works sim-wide (and in some cases grid-wide)
+- **"all"**: Targets everyone within 96 meters
+- **"self"**: Targets yourself
+- **"$lusr"**: Targets the last user found
+
+For simplicity's sake, we use NAME for all commands that use this system in their examples.
+
+---
+
+## Basic Operators
+
+These examples show how to provide names for commands:
+
+| Example                       | Description                                                     |
+| ----------------------------- | --------------------------------------------------------------- |
+| `-trap wrain`                 | Works within 96 meters (partial name)                           |
+| `-trap wrainwright mavendorf` | Works sim-wide (full name)                                      |
+| `-trap !wrain`                | Traps anyone _without_ "wrain" in their name (within 96 meters) |
+| `-trap all`                   | Traps everyone within 96 meters                                 |
+| `-trap self`                  | Traps yourself                                                  |
+| `-trap last`                  | Traps the last person targeted                                  |
+
+> **Note:** Anything starting with `$` is a variable and will be replaced with a respective value.
+
+## General Notes
+
+- All commands may be typed on channel 8 (`/8 command`) for privacy.
+- Use the variable `$lcmd` to reference the last executed command.
+
+## Core Commands
+
+> **Note:** Words in CAPITAL LETTERS are placeholders you should replace with actual values (e.g., `-trap NAME` becomes `-trap wrainwright`).
+
+`-reset`
+Resets the Photon Tool.
+
+`-restore`
+Restores the Photon Tool to factory settings.
+
+`-detach`
+Detaches the tool.
+
+`-off`
+Disables all but the core script. Useful for reducing lag in busy sims.
+
+`-on`
+Re-enables all scripts that have been turned off.
+
+`-hide`
+Hides the Photon Tool.
+
+`-show`
+Shows the Photon Tool.
+
+`-last`
+Executes the last command you ran.
+
+`-prefix NEWPREFIX`
+Changes the command prefix to NEWPREFIX.
+
+`-listen on CHANNEL`
+Changes the hidden command channel from 8 to CHANNEL.
+**Note:** You will no longer be able to use the old channel.
+
+`-color VECTOR/CONSTANT`
+Changes the theme color. You can use a vector or one of these constants:
+
+- White, Light Gray, Dark Gray, Black
+- Dark Yellow, Dark Pink, Dark Red, Dark Green, Dark Cyan, Dark Blue, Dark Purple
+- Yellow, Orange, Pink, Red, Green, Cyan, Purple
+- Neon Yellow, Neon Orange, Neon Pink, Neon Red, Neon Green, Neon Cyan, Neon Blue, Neon Purple
+
+`-color random`
+Sets your tool to a random color.
+
+`-sound on`
+Turns on command confirmation sounds.
+
+`-sound off`
+Turns off command confirmation sounds.
+
+`-sound KEY`
+Sets the command confirmation sound to a specific sound KEY.
+
+`-sound SOUND`
+Sets the command confirmation sound to a preset. Available presets: beep-1, beep-2, bell-1, sci-fi-1, door-1, bird-1, bird-2, bird-3, cat-1
+
+`-volume LEVEL`
+Sets the output volume to LEVEL.
+
+`-play KEY`
+Plays the sound with the specified KEY.
+
+`-loop KEY`
+Same as above, but loops the sound.
+
+`-loop stop`
+Stops the looping sound.
+
+`-mNUMBER COMMAND`
+Sets macro NUMBER to COMMAND for quick execution.
+Example: `-m1 trap wrain`
+
+`-mNUMBER`
+Runs the previously set macro for NUMBER.
+Example: `-m1`
+
+## Animation Commands
+
+`-undeform`
+Plays an undeform animation that attempts to undo any deformation caused by other commands.
+
+`-sit`
+Plays a simple generic sitting animation.
+
+`-sit stop`
+Stops the sitting animation.
+
+`-stop anims`
+Stops any animations the Photon Tool is playing.
+
+## Pet Commands
+
+The Photon Tool comes with a basic pet to keep you company. You can customize it by extracting the pet script, dropping it into any object, naming that object "pet," and replacing it in the Photon Tool.
+
+The pet uses physics by default. If it gets lost, stuck, or selected, it reverts to non-physical movement to catch up with you.
+
+`-pet spawn`
+Spawns a new Photon Tool pet.
+
+`-pet stay`
+Tells your pet to stay put.
+
+`-pet come`
+Tells your pet to return to you.
+
+`-pet playdead`
+Causes your pet to fall over dead for a while.
+
+`-pet die`
+Removes your pet permanently.
+
+## Communication/Social Commands
+
+To speak with other Photon Tool users, type `/12 message` to broadcast to all users in the sim. Messages are encrypted using a basic but effective system.
+
+`-dialog NAME, MESSAGE`
+Sends a dialog to NAME containing MESSAGE.
+
+`-im NAME, MESSAGE`
+Sends an instant message to NAME containing MESSAGE.
+
+`-report MESSAGE`
+Reports an error to the Photon Tool team. This takes approximately 30 seconds.
+
+`-text PROVIDER NUMBER MESSAGE`
+Sends a text message to NUMBER with MESSAGE. Supported providers: t-mobile, vmobl, boost, at&t, sprint, verizon, nextel.
+
+> **Note:** Carrier rates apply.
+
+`-shout MESSAGE`
+Shouts MESSAGE in local chat.
+
+`-say MESSAGE`
+Says MESSAGE in local chat.
+
+`-whisper MESSAGE`
+Whispers MESSAGE in local chat.
+
+`-title MESSAGE`
+Displays MESSAGE above your head.
+
+`-title on`
+Turns on the title display.
+
+`-title off`
+Turns off the title display.
+
+`-cclear`
+Clears the chat in a 20-meter radius.
+
+`-bio on`
+Turns on the social biography.
+
+`-bio off`
+Turns off the social biography.
+
+`-bio add FIELD: VALUE`
+Adds a field to your bio with the specified value.
+Example: `-bio add Name: Skaro Ghost`
+
+> **Note:** You can also use this command to change existing field values.
+
+`-bio remove FIELD`
+Removes FIELD from your bio.
+
+`-bio delete`
+Completely deletes your biography.
+
+## Rezzing Commands
+
+These commands require rez-enabled land to work.
+
+`-rez OBJECT`
+Rezzes OBJECT from the Photon Tool's inventory.
+
+`-rez cube`
+Rezzes a full-perms cube.
+
+`-rez sphere`
+Rezzes a full-perms sphere.
+
+`-rez cylinder`
+Rezzes a full-perms cylinder.
+
+`-rez torus`
+Rezzes a full-perms torus.
+
+`-rez sphere shield`
+Rezzes a spherical shield that follows you and repels slow-moving objects.
+
+`-walker`
+Enables the walker, allowing you to walk freely through the air.
+
+`-walker off`
+Turns off the walker.
+
+`-workspace`
+Rezzes a workspace for building.
+
+`-plat`
+Rezzes a 20m x 20m platform.
+
+`-plat large`
+Rezzes a 30m x 30m platform.
+
+`-plat small`
+Rezzes a 10m x 10m platform.
+
+`-smoke`
+Creates a large cloud of smoke around you. **Warning:** This is laggy. Great for dramatic escapes.
+
+`-request NAME`
+Sends a request pod to NAME that brings them to you. Expires after 1 minute.
+
+`-gotop NAME`
+Rezzes a pod that brings you to NAME when clicked. Expires after 1 minute.
+
+`-gotop VECTOR`
+Rezzes a pod that brings you to VECTOR when clicked. Expires after 1 minute.
+
+## "Annoying" Commands
+
+> **Warning:** Use at your own risk. Do not grief! It's frowned upon.
+
+`-trap NAME`
+Rezzes a trap around NAME. This trap can cross sim boundaries.
+
+`-orbit NAME`
+Orbits NAME if they are trapped.
+
+`-untrap NAME`
+Deletes the trap around NAME. Useful when you have multiple people trapped and only want to release one.
+
+`-push NAME`
+Pushes NAME using a combination of prims and llPushObject.
+
+`-push stop`
+Stops all pushers.
+
+`-chatbug`
+Rezzes a chatbug that relays anything said on channel 0 to you. It automatically deletes itself when you leave the sim.
+
+## Misc Commands
+
+`-npv`
+Rezzes a non-physical vehicle (NPV) that prevents you from being pushed or killed. It automatically deletes itself when you leave its 96-meter proximity. While sitting on it, physics-based commands like `-goto` or `-jump` are automatically delegated to the NPV. The NPV gains speed the longer you travel in one direction, making it easy to traverse Second Life.
+
+`-portal spawn ID`
+Spawns a new portal with the specified ID. If two portals share the same ID, walking through one teleports you to the other. Portals only work for users with a Photon Tool.
+
+`-rez kbox`
+Rezzes a kamikaze box that flings itself at the nearest non-group member, destroying them both.
+
+`-OBJECT die`
+Deletes OBJECT.
+
+`-die`
+Deletes all rezzed objects.
+
+## Land Administration Commands
+
+These utilities help you manage your land. Currently, they only work on land you own directly (not group land).
+
+`-land`
+Displays information about the land you're on.
+
+`-tp NAME`
+Teleports NAME home.
+
+`-unsit NAME`
+Unsits NAME if they are seated on something.
+
+`-eject NAME`
+Ejects NAME from your land.
+
+`-ban NAME`
+Bans NAME from your land.
+
+`-unban NAME`
+Unbans NAME from your land.
+
+`-primlimit`
+Shows how many prims the current land can hold.
+
+`-primcount`
+Shows how many prims are currently being used on this land.
+
+## Environment Commands
+
+These commands let you interact with your environment.
+
+`-cloak on`
+Makes you invisible (using an invisiprim) to people more than 10 meters away.
+
+`-cloak off`
+Turns off the invisibility cloak.
+
+`-light on`
+Turns on a light that illuminates the area around you.
+
+`-light off`
+Turns off the light.
+
+`-poof`
+Releases a cloud of particles around you. Just for fun!
+
+## Physics Commands
+
+The Photon Tool includes many physics-based movement functions. Most of these automatically delegate to the NPV if one is active.
+
+`-stop`
+Immediately stops all Photon Tool physical movement.
+
+`-lock`
+Locks you in place. Useful when AFK to prevent being pushed around.
+
+`-lock off`
+Unlocks you so you can move freely again.
+
+`-fastwarp`
+Warps you in a small circle rapidly, making it difficult for others to target you.
+
+`-fastwarp off`
+Turns off fastwarp.
+
+`-gravity LEVEL`
+Sets gravity to LEVEL. Options: normal, high, medium, off
+
+`-flight on`
+Turns on the flight enhancer, allowing you to fly above 200 meters.
+
+> **Note:** The flight enhancer is on by default.
+
+`-flight off`
+Turns off the flight enhancer.
+
+`-jump rand`
+Moves you to a random height between 250 and 4000 meters.
+
+`-jump HEIGHT`
+Moves you up to HEIGHT.
+
+`-up METERS`
+Moves you up by METERS.
+
+`-down METERS`
+Moves you down by METERS.
+
+`-ground`
+Brings you down to ground level.
+
+`-follow NAME`
+Causes you to follow NAME around.
+
+`-goto NAME`
+Warps you to NAME.
+
+`-goto VECTOR`
+Warps you to VECTOR.
+
+`-gotop NAME`
+Rezzes a goto pod to travel to NAME.
+
+`-fwd METERS`
+Moves you forward by METERS.
+
+`-bwd METERS`
+Moves you backward by METERS.
+
+`-impulse VECTOR`
+Applies a local impulse of VECTOR.
+
+## Camera Commands
+
+These commands control camera position and behavior.
+
+`-camwarp`
+Warps you to your camera's position using either physics or the NPV.
+
+`-campos`
+Rezzes a pod that brings you to your camera's position.
+
+`-camfollow NAME`
+Follows NAME with your camera.
+
+`-camfollow stop`
+Stops following with the camera.
+
+`-camlock`
+Locks your camera in place so your avatar can move while the camera stays put.
+
+`-camlock off`
+Returns movement control to your camera.
+
+`-cammap`
+Opens your map to your camera's location.
+
+`-campos`
+Displays your camera's current position.
+
+`-campos VECTOR`
+Sets your camera's position to VECTOR.
+
+`-camfix`
+Fixes your camera if a script disrupts it.
+
+## Web Commands
+
+`-site URL`
+Opens URL in your browser.
+
+`-google`
+Opens Google in your browser.
+
+`-google QUERY`
+Searches Google for QUERY.
+
+`-bing`
+Opens Bing in your browser.
+
+`-bing QUERY`
+Searches Bing for QUERY.
+
+`-yahoo`
+Opens Yahoo in your browser.
+
+`-yahoo QUERY`
+Searches Yahoo for QUERY.
+
+`-facebook`
+Opens Facebook in your browser.
+
+`-facebook USERNAME`
+Opens USERNAME's Facebook profile.
+
+`-twitter`
+Opens Twitter in your browser.
+
+`-myspace`
+Opens MySpace in your browser.
+
+`-youtube`
+Opens YouTube in your browser.
+
+`-lsl COMMAND`
+Looks up COMMAND on the LSL wiki.
+
+`-wiki TOPIC`
+Looks up TOPIC on Wikipedia.
+
+## Information Commands
+
+`-date`
+Displays the current date.
+
+`-region`
+Displays useful information about the region.
+
+`-region fps`
+Displays the region's frames per second.
+
+`-region td`
+Displays the region's time dilation.
+
+`-region host`
+Displays the region's host name.
+
+`-land`
+Displays information about the land you're on, including size, prim count, and permissions.
+
+`-lag`
+Displays the region's lag rating (Low, Medium, or High).
+
+`-n2k NAME`
+Returns the key for NAME.
+
+`-k2n KEY`
+Returns the name for KEY.
+
+`-scan`
+Scans for all agents (avatars) within 96 meters.
+
+`-scan active`
+Scans for all active objects (scripted and/or physical) within 96 meters.
+
+`-scan passive`
+Scans for all passive objects (non-scripted and non-physical) within 96 meters.
+
+`-scan scripted`
+Scans for all scripted objects within 96 meters.
+
+`-beacon NAME`
+Creates a beacon on NAME (assumes avatar).
+
+`-beacon active NAME`
+Creates a beacon on the closest active object matching NAME.
+
+`-beacon passive NAME`
+Creates a beacon on the closest passive object matching NAME.
+
+`-beacon scripted NAME`
+Creates a beacon on the closest scripted object matching NAME.
+
+`-beacon stop`
+Stops the beacon.
+
+`-md5 STRING`
+Returns the MD5 hash of STRING.
+
+`-t2b STRING`
+Converts STRING into byte format.
+
+`-b2t BYTES`
+Converts BYTES into string format.
+
+`-find NAME`
+Finds the location of NAME anywhere in the sim.
+
+`-oinfo KEY`
+Displays all information about the object with KEY.
+
+`-calc EQUATION`
+Calculates EQUATION and returns the result.
+
+`-slurl`
+Returns the SLURL to your current position.
+
+`-getpos`
+Displays your current position.
+
+`-getrot`
+Displays your current rotation.
+
+`-getvel`
+Displays your current velocity.
+
+`-getsize`
+Displays your current size.
+
+`-getheight`
+Displays your height.
+
+`-getall`
+Displays all of the above information.
+
+## Landmark Commands
+
+`-map list`
+Lists all saved landmarks.
+
+`-map save`
+Saves your current position as a landmark.
+
+`-map open NUMBER`
+Opens landmark NUMBER.
+
+`-map delete NUMBER`
+Deletes landmark NUMBER.
+
+## Radar Commands
+
+`-radar`
+Turns on the radar.
+
+`-radar off`
+Turns off the radar.
+
+The radar displays information in the format: `<name> <distance> <status>`
+
+**Status codes:**
+
+- `m` = mouselook
+- `f` = flying
+- `a` = away
+- `w` = walking
+
+If no status is shown, the person is idle.
+
+## Combat Commands
+
+`-kill NAME`
+Kills NAME.
+
+`-ppush NAME`
+Pushes NAME using physics.
+
+`-shield on`
+Turns on auto-shielding.
+
+`-shield off`
+Turns off auto-shielding.
+
+`-plant mine`
+Plants a mine under you in a disarmed state.
+
+`-arm mine` / `-arm mines`
+Arms the mine(s).
+
+`-disarm mine` / `-disarm mines`
+Disarms the mine(s).
+
+`-smog on`
+Turns on combat fog, making it harder for others to aim at you.
+
+`-smog off`
+Turns off combat fog.
+
+`-autokill on`
+Automatically kills everyone not in your group within 96 meters.
+
+`-autokill off`
+Turns off the autokiller.
+
+`-bdetect on`
+Turns on bump reporting, which notifies you when you're hit by a person or scripted object.
+
+`-bdetect off`
+Turns off bump reporting.
+
+`-sgrenade on`
+Turns on the built-in sound grenade.
+
+`-sgrenade off`
+Turns off the sound grenade.
+
+## Developer Commands
+
+These commands help developers build applications on the platform.
+
+`-debug`
+Turns on debug messages.
+
+`-debug off`
+Turns off debug messages.
+
+`-obj MESSAGE`
+Sends MESSAGE on the object channel.

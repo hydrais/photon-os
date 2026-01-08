@@ -57,10 +57,10 @@ if (result.success) {
 
 ### Subscribing to Device Messages
 
-Listen for messages sent from devices back to your app:
+Listen for messages sent from a device back to your app:
 
 ```tsx
-const unsubscribe = os.devices.subscribeToMessages((message) => {
+const unsubscribe = os.devices.subscribeToMessages(deviceId, (message) => {
   console.log(`Received ${message.type} from ${message.objectName}`);
   console.log("Payload:", message.payload);
 });

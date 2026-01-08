@@ -1,9 +1,16 @@
-import type { DeviceMessage, DeviceMessageCallback, SendMessageResult, SLDevice, Unsubscribe } from "../types/devices";
+import type {
+  DeviceMessage,
+  DeviceMessageCallback,
+  SendMessageResult,
+  SLDevice,
+  Unsubscribe,
+} from "../types/devices";
 import type { OS } from "./OS";
 
 export class DeviceManager {
   private os: OS;
-  private messageCallbacks: Set<DeviceMessageCallback> = new Set();
+  private messageCallbacks: { [deviceId: string]: Set<DeviceMessageCallback> } =
+    {};
   private subscribed: boolean = false;
 
   constructor(os: OS) {
@@ -33,8 +40,12 @@ export class DeviceManager {
   }
 
   /** Subscribe to messages from all registered devices */
-  public subscribeToMessages(callback: DeviceMessageCallback): Unsubscribe {
-    this.messageCallbacks.add(callback);
+  public subscribeToMessages(
+    deviceId: string,
+    callback: DeviceMessageCallback
+  ): Unsubscribe {
+    this.messageCallbacks[deviceId] = this.messageCallbacks[deviceId] ?? [];
+    this.messageCallbacks[deviceId].add(callback);
 
     // Start subscription if this is the first callback
     if (!this.subscribed) {
@@ -43,9 +54,17 @@ export class DeviceManager {
 
     // Return unsubscribe function
     return () => {
-      this.messageCallbacks.delete(callback);
+      if (this.messageCallbacks[deviceId]) {
+        this.messageCallbacks[deviceId].delete(callback);
+      }
+
       // Stop subscription if no more callbacks
-      if (this.messageCallbacks.size === 0 && this.subscribed) {
+      const totalSubscriptions = Object.values(this.messageCallbacks).reduce(
+        (acc, cv) => acc + cv.size,
+        0
+      );
+
+      if (totalSubscriptions === 0 && this.subscribed) {
         this.stopSubscription();
       }
     };
@@ -55,8 +74,10 @@ export class DeviceManager {
   private async startSubscription(): Promise<void> {
     const api = await this.os.getRPCAPI();
     await api.devices_subscribe((message: DeviceMessage) => {
-      // Forward to all registered callbacks
-      for (const callback of this.messageCallbacks) {
+      const callbacks = this.messageCallbacks[message.deviceId] ?? [];
+
+      // Forward to all registered callbacks for device
+      for (const callback of callbacks) {
         try {
           callback(message);
         } catch (error) {

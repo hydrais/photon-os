@@ -1,0 +1,206 @@
+---
+title: Creating Apps
+description: Build apps for Photon OS using the SDK
+---
+
+Photon OS apps are web applications that run in sandboxed iframes within the OS shell. Apps communicate with the OS through a message-passing API, abstracted by the SDK.
+
+## Getting Started
+
+While you can use any web framework, **React is recommended** as it pairs well with the `@photon-os/react` package which provides useful hooks.
+
+### Create a New Project
+
+```bash
+npm create vite@latest my-photon-app -- --template react-ts
+cd my-photon-app
+```
+
+### Install the SDK
+
+```bash
+npm install @photon-os/sdk @photon-os/react
+```
+
+## Using the SDK
+
+### Initializing
+
+Create an instance of the `OS` class to access Photon OS features:
+
+```tsx
+import { OS } from "@photon-os/sdk";
+
+const os = new OS();
+```
+
+The SDK automatically connects to the parent Photon OS shell via PostMessage.
+
+### Available Managers
+
+The `OS` instance provides access to several managers:
+
+| Manager | Purpose |
+|---------|---------|
+| `os.user` | Get current user information |
+| `os.apps` | App lifecycle (get installed, launch, install, uninstall) |
+| `os.prefs` | Store preferences (sandboxed per-app or shared) |
+| `os.accounts` | Second Life account linking |
+| `os.devices` | Communicate with Second Life devices |
+
+### Getting the Current User
+
+```tsx
+const user = await os.user.getCurrentUser();
+console.log(`Hello, ${user.displayName}!`);
+```
+
+### Using Preferences
+
+Store app-specific data that persists across sessions:
+
+```tsx
+// Save a preference (sandboxed to your app)
+await os.prefs.set("theme", "dark");
+
+// Read it back
+const theme = await os.prefs.get("theme");
+
+// Delete it
+await os.prefs.delete("theme");
+```
+
+For data that should be accessible to all apps:
+
+```tsx
+// Shared preferences (all apps can read/write)
+await os.prefs.setShared("globalSetting", true);
+const value = await os.prefs.getShared("globalSetting");
+```
+
+### Navigating Home
+
+Send the user back to the OS home screen:
+
+```tsx
+await os.homeButton();
+```
+
+## React Integration
+
+The `@photon-os/react` package provides hooks for common operations.
+
+### useInstalledApps
+
+Fetch and monitor installed apps:
+
+```tsx
+import { useInstalledApps } from "@photon-os/react";
+
+function MyComponent() {
+  const { installedApps, loading, error, refresh } = useInstalledApps();
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+
+  return (
+    <ul>
+      {installedApps.map((app) => (
+        <li key={app.bundleId}>{app.name}</li>
+      ))}
+    </ul>
+  );
+}
+```
+
+## App Definition
+
+When installing an app, you need to provide:
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `bundleId` | Unique identifier for your app | `com.mycompany.myapp` |
+| `name` | Display name shown to users | `My App` |
+| `author` | Developer or company name | `My Company` |
+| `url` | URL where your app is hosted | `https://example.com/app` |
+
+## Installing Your App
+
+To install your app in Photon OS:
+
+1. Deploy your app to a publicly accessible URL
+2. Open **Settings** in Photon OS
+3. Go to the **Apps** section
+4. Click **Install App**
+5. Fill in the app details:
+   - **App URL**: The URL where your app is hosted
+   - **App Name**: Display name for your app
+   - **Author**: Your name or company
+   - **Bundle ID**: A unique identifier (e.g., `com.yourname.appname`)
+6. Click **Install**
+
+Your app will now appear in the Launcher.
+
+## Example App
+
+Here's a minimal example that displays the current user and saves a preference:
+
+```tsx
+import { useEffect, useState } from "react";
+import { OS, type PhotonUser } from "@photon-os/sdk";
+
+const os = new OS();
+
+function App() {
+  const [user, setUser] = useState<PhotonUser | null>(null);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    // Load user and saved count on mount
+    async function init() {
+      const currentUser = await os.user.getCurrentUser();
+      setUser(currentUser);
+
+      const savedCount = await os.prefs.get("count");
+      if (typeof savedCount === "number") {
+        setCount(savedCount);
+      }
+    }
+    init();
+  }, []);
+
+  const increment = async () => {
+    const newCount = count + 1;
+    setCount(newCount);
+    await os.prefs.set("count", newCount);
+  };
+
+  return (
+    <div>
+      <h1>Hello, {user?.displayName ?? "Loading..."}!</h1>
+      <p>Count: {count}</p>
+      <button onClick={increment}>Increment</button>
+    </div>
+  );
+}
+
+export default App;
+```
+
+## Type Definitions
+
+The SDK exports TypeScript types for all data structures:
+
+```tsx
+import type {
+  PhotonUser,
+  AppDefinition,
+  SLDevice,
+  DeviceMessage,
+  PreferenceValue,
+} from "@photon-os/sdk";
+```
+
+## Next Steps
+
+- [Second Life Devices](/docs/sl-devices) - Communicate with scripted objects in Second Life

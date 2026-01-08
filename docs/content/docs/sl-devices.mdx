@@ -1,0 +1,595 @@
+---
+title: Second Life Devices
+description: Communicate with scripted objects in Second Life from your Photon apps
+---
+
+Photon OS enables bidirectional communication between your apps and scripted objects in Second Life. Objects can register themselves with your Photon account and exchange messages in real-time.
+
+## Prerequisites
+
+Before using device communication, you must:
+
+1. Link your Second Life account to your Photon account (Settings > Account)
+2. Add the PhotonDevice.lsl script to an object you own in Second Life
+
+## SDK API Reference
+
+The device API is available via `os.devices` in the SDK.
+
+### Getting Registered Devices
+
+Fetch all devices registered to the current user:
+
+```tsx
+import { OS, type SLDevice } from "@photon-os/sdk";
+
+const os = new OS();
+
+const devices: SLDevice[] = await os.devices.getRegisteredDevices();
+
+devices.forEach((device) => {
+  console.log(
+    `${device.objectName} - ${device.isOnline ? "Online" : "Offline"}`
+  );
+});
+```
+
+### Sending Messages to Devices
+
+Send a typed message with a JSON payload to a specific device:
+
+```tsx
+const result = await os.devices.sendMessage(
+  deviceId, // The device ID from getRegisteredDevices()
+  "chat", // Message type - your scripts can filter on this
+  { text: "Hello from Photon!" } // JSON payload
+);
+
+if (result.success) {
+  console.log("Message sent!");
+} else {
+  console.error(result.error);
+  if (result.deviceOffline) {
+    console.log("Device appears to be offline");
+  }
+}
+```
+
+### Subscribing to Device Messages
+
+Listen for messages sent from devices back to your app:
+
+```tsx
+const unsubscribe = os.devices.subscribeToMessages((message) => {
+  console.log(`Received ${message.type} from ${message.objectName}`);
+  console.log("Payload:", message.payload);
+});
+
+// Later, to stop listening:
+unsubscribe();
+```
+
+### Unregistering Devices
+
+Remove a device from your account:
+
+```tsx
+await os.devices.unregisterDevice(deviceId);
+```
+
+## Type Reference
+
+### SLDevice
+
+```tsx
+interface SLDevice {
+  id: string; // Unique device ID
+  objectKey: string; // SL object UUID
+  objectName: string; // Name of the object in SL
+  regionName?: string; // SL region name (if available)
+  isOnline: boolean; // Whether device is currently reachable
+  lastHeartbeatAt: Date; // Last heartbeat timestamp
+  registeredAt: Date; // When device was registered
+  metadata?: Record<string, unknown>; // Optional metadata
+}
+```
+
+### DeviceMessage
+
+```tsx
+interface DeviceMessage {
+  deviceId: string; // ID of the device that sent the message
+  objectKey: string; // SL object UUID
+  objectName: string; // Name of the object in SL
+  type: string; // Message type defined by your script
+  payload: Record<string, unknown>; // JSON payload
+  timestamp: Date; // When the message was received
+}
+```
+
+### SendMessageResult
+
+```tsx
+interface SendMessageResult {
+  success: boolean; // Whether message was delivered
+  error?: string; // Error message if failed
+  deviceOffline?: boolean; // True if device couldn't be reached
+}
+```
+
+## LSL Scripts
+
+### PhotonDevice.lsl
+
+This is the core library script. Drop it into any object to enable Photon connectivity. The script auto-registers on startup and handles heartbeats automatically.
+
+**Requirements:**
+
+- Object owner must have their SL account linked to their Photon OS account
+
+```
+// ============================================
+// PhotonDevice.lsl - Photon OS Device Library
+// ============================================
+// Drop this script into any object to enable
+// Photon connectivity. The script auto-registers
+// on startup. Other scripts in the object
+// communicate via link messages.
+//
+// REQUIREMENTS:
+// - Object owner must have their SL account linked
+//   to their Photon OS account first
+//
+// USAGE:
+// The script registers automatically on startup.
+// Send link messages to this script:
+//   llMessageLinked(LINK_SET, PHOTON_SEND, "message_type", "json_payload");
+//
+// Receive link messages from this script:
+//   PHOTON_REGISTERED - Registration confirmed (key = device_id)
+//   PHOTON_OFFLINE - Connection lost
+//   PHOTON_RECEIVE - Message received (str = type, key = payload JSON)
+//   PHOTON_ERROR - Error occurred (key = error message)
+
+// ===================
+// Link Message Channels
+// ===================
+// Inbound (to PhotonDevice)
+integer PHOTON_REGISTER = 90001;   // Request registration
+integer PHOTON_SEND = 90002;       // Send message to Photon
+
+// Outbound (from PhotonDevice)
+integer PHOTON_REGISTERED = 90010; // Registration confirmed (key = device_id)
+integer PHOTON_OFFLINE = 90011;    // Connection lost
+integer PHOTON_RECEIVE = 90012;    // Message received (str = type, key = payload JSON)
+integer PHOTON_ERROR = 90019;      // Error occurred (key = error message)
+
+// ===================
+// Configuration
+// ===================
+string SUPABASE_URL = "https://rujeueevbvywlfrcjeya.supabase.co/functions/v1";
+integer HEARTBEAT_INTERVAL = 300;  // 5 minutes
+
+// ===================
+// State Variables
+// ===================
+string gCallbackUrl = "";
+string gDeviceId = "";
+integer gRegistered = FALSE;
+
+// Request tracking
+key gRegisterRequest = NULL_KEY;
+key gHeartbeatRequest = NULL_KEY;
+key gMessageRequest = NULL_KEY;
+
+// ===================
+// Helper Functions
+// ===================
+broadcast(integer channel, string str, key id)
+{
+    llMessageLinked(LINK_SET, channel, str, id);
+}
+
+requestRegistration()
+{
+    if (gCallbackUrl == "")
+    {
+        // Request URL first - registration will happen when we get it
+        llRequestURL();
+        return;
+    }
+
+    string body = llList2Json(JSON_OBJECT, [
+        "callback_url", (string)gCallbackUrl
+    ]);
+
+    gRegisterRequest = llHTTPRequest(
+        SUPABASE_URL + "/register-sl-device",
+        [HTTP_METHOD, "POST", HTTP_MIMETYPE, "application/json"],
+        body
+    );
+}
+
+sendHeartbeat()
+{
+    if (gCallbackUrl == "") return;
+
+    string body = llList2Json(JSON_OBJECT, [
+        "callback_url", (string)gCallbackUrl
+    ]);
+
+    gHeartbeatRequest = llHTTPRequest(
+        SUPABASE_URL + "/sl-device-heartbeat",
+        [HTTP_METHOD, "POST", HTTP_MIMETYPE, "application/json"],
+        body
+    );
+}
+
+sendMessageToPhoton(string msgType, string payload)
+{
+    if (!gRegistered)
+    {
+        broadcast(PHOTON_ERROR, "error", "Not registered");
+        return;
+    }
+
+    string body = llList2Json(JSON_OBJECT, [
+        "type", msgType,
+        "payload", payload
+    ]);
+
+    gMessageRequest = llHTTPRequest(
+        SUPABASE_URL + "/sl-device-message",
+        [HTTP_METHOD, "POST", HTTP_MIMETYPE, "application/json"],
+        body
+    );
+}
+
+markOffline()
+{
+    gRegistered = FALSE;
+    gDeviceId = "";
+    llSetTimerEvent(0.0);
+    broadcast(PHOTON_OFFLINE, "offline", "");
+}
+
+// ===================
+// Main State
+// ===================
+default
+{
+    state_entry()
+    {
+        // Request a URL for incoming HTTP requests
+        llRequestURL();
+    }
+
+    on_rez(integer param)
+    {
+        // Reset state when rezzed - will auto-register when URL is granted
+        gCallbackUrl = "";
+        gRegistered = FALSE;
+        gDeviceId = "";
+        llSetTimerEvent(0.0);
+        broadcast(PHOTON_OFFLINE, "offline", "");
+        llRequestURL();
+    }
+
+    changed(integer change)
+    {
+        if (change & CHANGED_REGION)
+        {
+            // URL is invalid after region change
+            gCallbackUrl = "";
+            markOffline();
+            llRequestURL();
+        }
+        if (change & CHANGED_OWNER)
+        {
+            // New owner needs to re-register
+            llResetScript();
+        }
+    }
+
+    // ===================
+    // URL Events
+    // ===================
+    http_request(key id, string method, string body)
+    {
+        if (method == URL_REQUEST_GRANTED)
+        {
+            // The actual URL is in the body parameter, id is just a handle
+            gCallbackUrl = body;
+
+            // Auto-register when we get a URL
+            requestRegistration();
+            return;
+        }
+
+        if (method == URL_REQUEST_DENIED)
+        {
+            llOwnerSay("[Photon] ERROR: URL request denied - no available URLs");
+            broadcast(PHOTON_ERROR, "error", "URL request denied - no available URLs");
+            return;
+        }
+
+        // Incoming HTTP request from Photon
+        if (method == "POST")
+        {
+            // Parse the message
+            string msgType = llJsonGetValue(body, ["type"]);
+            string payload = llJsonGetValue(body, ["payload"]);
+
+            if (msgType == JSON_INVALID)
+            {
+                llHTTPResponse(id, 400, "Invalid request");
+                return;
+            }
+
+            // Broadcast to other scripts
+            broadcast(PHOTON_RECEIVE, msgType, payload);
+
+            llHTTPResponse(id, 200, "OK");
+            return;
+        }
+
+        // Unknown request
+        llHTTPResponse(id, 405, "Method not allowed");
+    }
+
+    // ===================
+    // HTTP Responses
+    // ===================
+    http_response(key id, integer status, list metadata, string body)
+    {
+        // Registration response
+        if (id == gRegisterRequest)
+        {
+            gRegisterRequest = NULL_KEY;
+
+            if (status == 200)
+            {
+                string success = llJsonGetValue(body, ["success"]);
+                if (success == JSON_TRUE)
+                {
+                    gDeviceId = llJsonGetValue(body, ["device_id"]);
+                    gRegistered = TRUE;
+                    llSetTimerEvent(HEARTBEAT_INTERVAL);
+                    broadcast(PHOTON_REGISTERED, "registered", gDeviceId);
+                    return;
+                }
+            }
+
+            // Registration failed
+            string error = llJsonGetValue(body, ["error"]);
+            if (error == JSON_INVALID) error = "Unknown error";
+            llOwnerSay("[Photon] ERROR: Registration failed (HTTP " + (string)status + "): " + error);
+            broadcast(PHOTON_ERROR, "register_failed", error);
+            return;
+        }
+
+        // Heartbeat response
+        if (id == gHeartbeatRequest)
+        {
+            gHeartbeatRequest = NULL_KEY;
+
+            if (status != 200)
+            {
+                // Heartbeat failed - might need to re-register
+                string error = llJsonGetValue(body, ["error"]);
+                if (error == JSON_INVALID) error = "Unknown error";
+                llOwnerSay("[Photon] WARNING: Heartbeat failed (HTTP " + (string)status + "): " + error);
+                broadcast(PHOTON_ERROR, "heartbeat_failed", error);
+                // Don't mark offline yet - could be temporary
+            }
+            return;
+        }
+
+        // Message send response
+        if (id == gMessageRequest)
+        {
+            gMessageRequest = NULL_KEY;
+
+            if (status != 200)
+            {
+                string error = llJsonGetValue(body, ["error"]);
+                if (error == JSON_INVALID) error = "Unknown error";
+                llOwnerSay("[Photon] ERROR: Send message failed (HTTP " + (string)status + "): " + error);
+                broadcast(PHOTON_ERROR, "send_failed", error);
+            }
+            return;
+        }
+    }
+
+    // ===================
+    // Link Messages (from other scripts)
+    // ===================
+    link_message(integer sender, integer num, string str, key id)
+    {
+        if (num == PHOTON_REGISTER)
+        {
+            requestRegistration();
+            return;
+        }
+
+        if (num == PHOTON_SEND)
+        {
+            sendMessageToPhoton(str, (string)id);
+            return;
+        }
+    }
+
+    // ===================
+    // Heartbeat Timer
+    // ===================
+    timer()
+    {
+        sendHeartbeat();
+    }
+}
+```
+
+### PhotonChat.lsl
+
+This is an example companion script that receives "chat" messages and echoes them back. Add this alongside PhotonDevice.lsl to test messaging.
+
+```
+// ============================================
+// PhotonChat.lsl - Chat Output for Photon
+// ============================================
+// Add this script alongside PhotonDevice.lsl
+// to output received "chat" messages to local chat
+// and echo them back to the sender.
+
+// PhotonDevice link message channels
+integer PHOTON_SEND = 90002;
+integer PHOTON_RECEIVE = 90012;
+
+default
+{
+    link_message(integer sender, integer num, string str, key id)
+    {
+        if (num == PHOTON_RECEIVE && str == "chat")
+        {
+            // Parse the text from the payload
+            string text = llJsonGetValue((string)id, ["text"]);
+            if (text != JSON_INVALID && text != "")
+            {
+                // Say in local chat
+                llSay(0, text);
+
+                // Echo back to the app
+                string echoPayload = llList2Json(JSON_OBJECT, [
+                    "original", text,
+                    "echo", "Echo: " + text
+                ]);
+                llMessageLinked(LINK_SET, PHOTON_SEND, "echo", echoPayload);
+            }
+        }
+    }
+}
+```
+
+## Link Message Protocol
+
+PhotonDevice.lsl communicates with other scripts in the same object using link messages. Use these channel numbers:
+
+### Inbound Channels (to PhotonDevice)
+
+| Channel | Constant          | Purpose                    |
+| ------- | ----------------- | -------------------------- |
+| 90001   | `PHOTON_REGISTER` | Request re-registration    |
+| 90002   | `PHOTON_SEND`     | Send message to Photon app |
+
+### Outbound Channels (from PhotonDevice)
+
+| Channel | Constant            | Purpose                   |
+| ------- | ------------------- | ------------------------- |
+| 90010   | `PHOTON_REGISTERED` | Registration confirmed    |
+| 90011   | `PHOTON_OFFLINE`    | Connection lost           |
+| 90012   | `PHOTON_RECEIVE`    | Message received from app |
+| 90019   | `PHOTON_ERROR`      | Error occurred            |
+
+### Message Formats
+
+**Sending a message to your app:**
+
+```
+string payload = llList2Json(JSON_OBJECT, [
+    "key1", "value1",
+    "key2", "value2"
+]);
+llMessageLinked(LINK_SET, PHOTON_SEND, "my_message_type", payload);
+```
+
+**Receiving a message from your app:**
+
+```
+link_message(integer sender, integer num, string str, key id)
+{
+    if (num == PHOTON_RECEIVE)
+    {
+        // str = message type (e.g., "chat")
+        // id = JSON payload (cast to string to parse)
+        string payload = (string)id;
+        string value = llJsonGetValue(payload, ["key1"]);
+    }
+}
+```
+
+## Building Custom Scripts
+
+To create your own companion script:
+
+1. Define the link message channels at the top of your script:
+
+```
+integer PHOTON_SEND = 90002;
+integer PHOTON_RECEIVE = 90012;
+```
+
+2. Listen for `PHOTON_RECEIVE` to handle incoming messages:
+
+```
+link_message(integer sender, integer num, string str, key id)
+{
+    if (num == PHOTON_RECEIVE && str == "your_type")
+    {
+        // Handle the message
+    }
+}
+```
+
+3. Use `PHOTON_SEND` to send messages back to your app:
+
+```
+string payload = llList2Json(JSON_OBJECT, ["status", "ok"]);
+llMessageLinked(LINK_SET, PHOTON_SEND, "response", payload);
+```
+
+### Example: LED Controller
+
+```
+// Control an object's color from your Photon app
+integer PHOTON_SEND = 90002;
+integer PHOTON_RECEIVE = 90012;
+
+default
+{
+    link_message(integer sender, integer num, string str, key id)
+    {
+        if (num == PHOTON_RECEIVE && str == "led")
+        {
+            string color = llJsonGetValue((string)id, ["color"]);
+
+            if (color == "red")
+                llSetColor(<1,0,0>, ALL_SIDES);
+            else if (color == "green")
+                llSetColor(<0,1,0>, ALL_SIDES);
+            else if (color == "blue")
+                llSetColor(<0,0,1>, ALL_SIDES);
+
+            // Confirm the change
+            string response = llList2Json(JSON_OBJECT, [
+                "color", color,
+                "status", "applied"
+            ]);
+            llMessageLinked(LINK_SET, PHOTON_SEND, "led_status", response);
+        }
+    }
+}
+```
+
+Then in your app:
+
+```tsx
+// Send color command
+await os.devices.sendMessage(deviceId, "led", { color: "red" });
+
+// Listen for confirmation
+os.devices.subscribeToMessages((msg) => {
+  if (msg.type === "led_status") {
+    console.log(`LED set to ${msg.payload.color}`);
+  }
+});
+```

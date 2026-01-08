@@ -7,7 +7,7 @@ import {
 } from "react";
 import type { User, Session } from "@supabase/supabase-js";
 import { supabase } from "../supabase/client";
-import { LoginPage } from "./components/LoginPage";
+import { AuthPage } from "./components/AuthPage";
 import { Spinner } from "@/components/ui/spinner";
 
 type AuthContextType = {
@@ -58,9 +58,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
     );
   }
 
-  // Login gate: show login page if not authenticated
+  // Login gate: show auth page if not authenticated
   if (!user) {
-    return <LoginPage />;
+    return <AuthPage />;
   }
 
   return (

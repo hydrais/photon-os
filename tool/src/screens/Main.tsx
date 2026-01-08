@@ -1,153 +1,243 @@
-import { useState, useEffect } from "react";
-import { OS, type SLDevice, type DeviceMessage } from "@photon-os/sdk";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
+import { useState, useEffect, useRef } from "react";
+import { OS, type SLDevice } from "@photon-os/sdk";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import {
+  SendIcon,
+  XIcon,
+  TerminalIcon,
+  WifiIcon,
+  WifiOffIcon,
+  HelpCircleIcon,
+} from "lucide-react";
 
 const os = new OS();
+const HISTORY_KEY = "commandHistory";
+
+function findPhotonTool(devices: SLDevice[]): SLDevice | undefined {
+  return devices.find((d) => {
+    const name = d.objectName.toLowerCase();
+    return name.includes("photon") && name.includes("tool");
+  });
+}
 
 export function MainScreen() {
-  const [devices, setDevices] = useState<SLDevice[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
-  const [message, setMessage] = useState("");
+  const [connectedDevice, setConnectedDevice] = useState<SLDevice | null>(null);
+  const [command, setCommand] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [incomingMessages, setIncomingMessages] = useState<DeviceMessage[]>([]);
+  const [commandHistory, setCommandHistory] = useState<string[]>([]);
+  const historyEndRef = useRef<HTMLDivElement>(null);
 
+  // Load devices and saved history
   useEffect(() => {
-    os.devices.getRegisteredDevices().then((result) => {
-      setDevices(result);
+    Promise.all([
+      os.devices.getRegisteredDevices(),
+      os.prefs.get(HISTORY_KEY),
+    ]).then(([devices, savedHistory]) => {
+      const device = findPhotonTool(devices);
+      setConnectedDevice(device ?? null);
+      if (
+        Array.isArray(savedHistory) &&
+        savedHistory.every((item) => typeof item === "string")
+      ) {
+        setCommandHistory(savedHistory as string[]);
+      }
       setLoading(false);
     });
-
-    // Subscribe to incoming messages from devices
-    const unsubscribe = os.devices.subscribeToMessages((msg) => {
-      setIncomingMessages((prev) => [...prev.slice(-9), msg]); // Keep last 10
-    });
-
-    return () => unsubscribe();
   }, []);
 
-  const handleSend = async () => {
-    if (!selectedDeviceId || !message.trim()) return;
+  // Save history when it changes
+  useEffect(() => {
+    if (!loading) {
+      os.prefs.set(HISTORY_KEY, commandHistory);
+    }
+  }, [commandHistory, loading]);
+
+  // Scroll to bottom when history updates
+  useEffect(() => {
+    historyEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [commandHistory]);
+
+  const sendCommand = async (cmd: string) => {
+    if (!connectedDevice || !cmd.trim()) return;
 
     setSending(true);
     setError(null);
 
     try {
-      const result = await os.devices.sendMessage(selectedDeviceId, "chat", {
-        text: message.trim(),
-      });
+      const result = await os.devices.sendMessage(
+        connectedDevice.id,
+        "command",
+        {
+          command: cmd.trim(),
+        }
+      );
 
       if (result.success) {
-        setMessage("");
+        setCommandHistory((prev) => [...prev, cmd.trim()]);
+        setCommand("");
       } else {
-        setError(result.error || "Failed to send message");
+        setError(result.error || "Failed to send command");
       }
-    } catch (err) {
-      setError("Failed to send message");
+    } catch {
+      setError("Failed to send command");
     } finally {
       setSending(false);
     }
   };
 
-  const selectedDevice = devices.find((d) => d.id === selectedDeviceId);
+  const removeCommand = (index: number) => {
+    setCommandHistory((prev) => prev.filter((_, i) => i !== index));
+  };
 
+  const sendSilentCommand = async (cmd: string) => {
+    if (!connectedDevice || !cmd.trim()) return;
+    await os.devices.sendMessage(connectedDevice.id, "command", {
+      command: cmd.trim(),
+    });
+  };
+
+  const handleSend = () => sendCommand(command);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-stone-100 flex items-center justify-center">
+        <Spinner className="text-stone-400" />
+      </div>
+    );
+  }
+
+  // No device found
+  if (!connectedDevice) {
+    return (
+      <div className="fixed inset-0 bg-stone-100 flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-stone-200 flex items-center justify-center mb-4">
+          <WifiOffIcon className="w-8 h-8 text-stone-400" />
+        </div>
+        <p className="text-stone-700 font-medium">Not Connected</p>
+        <p className="text-sm text-stone-500 mt-1 max-w-[240px]">
+          Make sure your Photon Tool is attached to your avatar.
+        </p>
+      </div>
+    );
+  }
+
+  // Connected - show chat interface
   return (
-    <div className="fixed inset-0 bg-stone-200 flex flex-col p-4 gap-4">
-      <h1 className="text-lg font-semibold">Send Message to Device</h1>
-
-      {loading ? (
-        <div className="flex items-center justify-center flex-1">
-          <Spinner />
+    <div className="fixed inset-0 bg-stone-100 flex flex-col">
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-stone-200">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-sm shadow-violet-500/20">
+          <TerminalIcon className="w-5 h-5 text-white" />
         </div>
-      ) : devices.length === 0 ? (
-        <div className="text-center text-muted-foreground flex-1 flex items-center justify-center">
-          No devices connected. Add a PhotonDevice script to an object in Second
-          Life.
+        <div className="flex-1">
+          <h1 className="text-base font-semibold text-stone-900">
+            Photon Tool
+          </h1>
+          <div className="flex items-center gap-1.5 text-xs">
+            {connectedDevice.isOnline ? (
+              <>
+                <WifiIcon className="w-3 h-3 text-emerald-500" />
+                <span className="text-emerald-600">Connected</span>
+              </>
+            ) : (
+              <>
+                <WifiOffIcon className="w-3 h-3 text-stone-400" />
+                <span className="text-stone-500">Offline</span>
+              </>
+            )}
+          </div>
         </div>
-      ) : (
-        <>
-          <div className="flex flex-col gap-2">
-            <label className="text-sm font-medium">Device</label>
-            <Select value={selectedDeviceId} onValueChange={setSelectedDeviceId}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a device..." />
-              </SelectTrigger>
-              <SelectContent>
-                {devices.map((device) => (
-                  <SelectItem key={device.id} value={device.id}>
-                    <span
-                      className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                        device.isOnline ? "bg-green-500" : "bg-gray-400"
-                      }`}
-                    />
-                    {device.objectName}
-                    {device.regionName && (
-                      <span className="text-muted-foreground ml-1">
-                        ({device.regionName})
-                      </span>
-                    )}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        <Button
+          variant="ghost"
+          size="icon-lg"
+          onClick={() => sendSilentCommand("help")}
+        >
+          <HelpCircleIcon className="w-5 h-5" />
+        </Button>
+      </div>
+
+      {/* Command history */}
+      <div className="flex-1 overflow-y-auto p-4 pb-24">
+        {commandHistory.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-stone-400">
+            <TerminalIcon className="w-8 h-8 mb-2 opacity-50" />
+            <p className="text-sm">No commands yet</p>
           </div>
-
-          <div className="flex flex-col gap-2 flex-1">
-            <label className="text-sm font-medium">Message</label>
-            <Textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type your message..."
-              className="flex-1 resize-none"
-              disabled={!selectedDeviceId || sending}
-            />
-          </div>
-
-          {error && (
-            <div className="text-sm text-destructive">{error}</div>
-          )}
-
-          <Button
-            onClick={handleSend}
-            disabled={!selectedDeviceId || !message.trim() || sending}
-            className="w-full"
-          >
-            {sending ? <Spinner className="size-4" /> : "Send"}
-          </Button>
-
-          {selectedDevice && !selectedDevice.isOnline && (
-            <div className="text-sm text-amber-600 text-center">
-              This device appears to be offline
-            </div>
-          )}
-
-          {incomingMessages.length > 0 && (
-            <div className="flex flex-col gap-2 mt-4">
-              <label className="text-sm font-medium">Incoming Messages</label>
-              <div className="bg-white rounded-md border p-2 max-h-40 overflow-y-auto">
-                {incomingMessages.map((msg, idx) => (
-                  <div key={idx} className="text-sm py-1 border-b last:border-b-0">
-                    <span className="text-muted-foreground">[{msg.type}]</span>{" "}
-                    {typeof msg.payload === "object"
-                      ? JSON.stringify(msg.payload)
-                      : String(msg.payload)}
-                  </div>
-                ))}
+        ) : (
+          <div className="space-y-2">
+            {commandHistory.map((cmd, idx) => (
+              <div
+                key={idx}
+                className="group flex items-center gap-2 bg-white hover:bg-stone-50 rounded-lg border border-stone-200 shadow-sm transition-colors"
+              >
+                <button
+                  onClick={() => sendCommand(cmd)}
+                  disabled={sending}
+                  className="flex-1 text-left text-sm text-stone-700 px-3 py-2.5 font-mono disabled:opacity-50"
+                >
+                  <span className="text-violet-500 mr-2">$</span>
+                  {cmd}
+                </button>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => removeCommand(idx)}
+                  className="mr-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <XIcon className="w-4 h-4" />
+                </Button>
               </div>
-            </div>
-          )}
-        </>
-      )}
+            ))}
+            <div ref={historyEndRef} />
+          </div>
+        )}
+      </div>
+
+      {/* Floating input */}
+      <div className="absolute bottom-4 left-4 right-4">
+        {error && <div className="text-sm text-red-500 mb-2 px-1">{error}</div>}
+        <div className="flex gap-2">
+          <InputGroup className="flex-1 bg-white shadow-sm">
+            <InputGroupAddon className="font-mono">$</InputGroupAddon>
+            <InputGroupInput
+              value={command}
+              onChange={(e) => setCommand(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Enter command..."
+              disabled={sending}
+              className="font-mono text-xs"
+            />
+          </InputGroup>
+          <Button
+            size="icon-lg"
+            onClick={handleSend}
+            disabled={!command.trim() || sending}
+            className="bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 shadow-sm shadow-violet-500/25"
+          >
+            {sending ? (
+              <Spinner className="w-4 h-4" />
+            ) : (
+              <SendIcon className="w-4 h-4" />
+            )}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

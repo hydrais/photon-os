@@ -34,6 +34,7 @@ export function MainScreen() {
   const [error, setError] = useState<string | null>(null);
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const historyEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Load devices and saved history
   useEffect(() => {
@@ -83,6 +84,7 @@ export function MainScreen() {
       if (result.success) {
         setCommandHistory((prev) => [...prev, cmd.trim()]);
         setCommand("");
+        inputRef.current?.focus();
       } else {
         setError(result.error || "Failed to send command");
       }
@@ -216,6 +218,7 @@ export function MainScreen() {
           <InputGroup className="flex-1 bg-white shadow-sm">
             <InputGroupAddon className="font-mono">$</InputGroupAddon>
             <InputGroupInput
+              ref={inputRef}
               value={command}
               onChange={(e) => setCommand(e.target.value)}
               onKeyDown={handleKeyDown}

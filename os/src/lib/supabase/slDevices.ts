@@ -104,48 +104,99 @@ export async function sendMessageToDevice(
 
 // Realtime subscription management
 let activeChannel: RealtimeChannel | null = null;
-let activeCallback: ((message: DeviceMessage) => void) | null = null;
+let activeUserId: string | null = null;
+const activeCallbacks: Set<(message: DeviceMessage) => void> = new Set();
+
+function parseDeviceMessage(payload: unknown): DeviceMessage | null {
+  if (!payload) return null;
+  const msg = payload as {
+    device_id: string;
+    object_key: string;
+    object_name: string;
+    type: string;
+    payload: Record<string, unknown>;
+    timestamp: string;
+  };
+  return {
+    deviceId: msg.device_id,
+    objectKey: msg.object_key,
+    objectName: msg.object_name,
+    type: msg.type,
+    payload: msg.payload,
+    timestamp: new Date(msg.timestamp),
+  };
+}
+
+function ensureChannel(userId: string): void {
+  if (activeChannel && activeUserId === userId) {
+    console.log("[slDevices] Channel already exists for user:", userId);
+    return;
+  }
+
+  // Clean up existing channel if user changed
+  if (activeChannel) {
+    console.log("[slDevices] Cleaning up old channel for user:", activeUserId);
+    supabase.removeChannel(activeChannel);
+  }
+
+  console.log("[slDevices] Creating channel for user:", userId);
+  activeUserId = userId;
+  activeChannel = supabase
+    .channel(`sl-messages:${userId}`)
+    .on("broadcast", { event: "device_message" }, (payload) => {
+      console.log("[slDevices] Received broadcast:", payload);
+      const message = parseDeviceMessage(payload.payload);
+      if (message) {
+        console.log("[slDevices] Parsed message:", message);
+        console.log("[slDevices] Notifying", activeCallbacks.size, "callbacks");
+        for (const cb of activeCallbacks) {
+          try {
+            cb(message);
+          } catch (e) {
+            console.error("Error in device message callback:", e);
+          }
+        }
+      }
+    })
+    .subscribe((status) => {
+      console.log("[slDevices] Channel subscription status:", status);
+    });
+}
+
+function cleanupChannelIfEmpty(): void {
+  if (activeCallbacks.size === 0 && activeChannel) {
+    supabase.removeChannel(activeChannel);
+    activeChannel = null;
+    activeUserId = null;
+  }
+}
+
+export function addDeviceMessageListener(
+  userId: string,
+  callback: (message: DeviceMessage) => void
+): () => void {
+  activeCallbacks.add(callback);
+  ensureChannel(userId);
+
+  return () => {
+    activeCallbacks.delete(callback);
+    cleanupChannelIfEmpty();
+  };
+}
 
 export function subscribeToDeviceMessages(
   userId: string,
   callback: (message: DeviceMessage) => void
 ): void {
-  // Unsubscribe from any existing channel
-  if (activeChannel) {
-    supabase.removeChannel(activeChannel);
-  }
-
-  activeCallback = callback;
-  activeChannel = supabase
-    .channel(`sl-messages:${userId}`)
-    .on("broadcast", { event: "device_message" }, (payload) => {
-      if (activeCallback && payload.payload) {
-        const msg = payload.payload as {
-          device_id: string;
-          object_key: string;
-          object_name: string;
-          type: string;
-          payload: Record<string, unknown>;
-          timestamp: string;
-        };
-
-        activeCallback({
-          deviceId: msg.device_id,
-          objectKey: msg.object_key,
-          objectName: msg.object_name,
-          type: msg.type,
-          payload: msg.payload,
-          timestamp: new Date(msg.timestamp),
-        });
-      }
-    })
-    .subscribe();
+  activeCallbacks.add(callback);
+  ensureChannel(userId);
 }
 
 export function unsubscribeFromDeviceMessages(): void {
+  activeCallbacks.clear();
   if (activeChannel) {
     supabase.removeChannel(activeChannel);
     activeChannel = null;
+    activeUserId = null;
   }
-  activeCallback = null;
 }

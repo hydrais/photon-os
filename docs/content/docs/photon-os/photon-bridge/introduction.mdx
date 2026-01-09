@@ -144,6 +144,7 @@ This is the core library script. Drop it into any object to enable Photon connec
 // The script registers automatically on startup.
 // Send link messages to this script:
 //   llMessageLinked(LINK_SET, PHOTON_SEND, "message_type", "json_payload");
+//   llMessageLinked(LINK_SET, PHOTON_STATUS, "", "");  // Request current status
 //
 // Receive link messages from this script:
 //   PHOTON_REGISTERED - Registration confirmed (key = device_id)
@@ -157,6 +158,7 @@ This is the core library script. Drop it into any object to enable Photon connec
 // Inbound (to PhotonDevice)
 integer PHOTON_REGISTER = 90001;   // Request registration
 integer PHOTON_SEND = 90002;       // Send message to Photon
+integer PHOTON_STATUS = 90003;     // Request current status
 
 // Outbound (from PhotonDevice)
 integer PHOTON_REGISTERED = 90010; // Registration confirmed (key = device_id)
@@ -417,6 +419,20 @@ default
             sendMessageToPhoton(str, (string)id);
             return;
         }
+
+        if (num == PHOTON_STATUS)
+        {
+            // Respond with current status
+            if (gRegistered)
+            {
+                broadcast(PHOTON_REGISTERED, "registered", gDeviceId);
+            }
+            else
+            {
+                broadcast(PHOTON_OFFLINE, "offline", "");
+            }
+            return;
+        }
     }
 
     // ===================
@@ -480,6 +496,7 @@ PhotonDevice.lsl communicates with other scripts in the same object using link m
 | ------- | ----------------- | -------------------------- |
 | 90001   | `PHOTON_REGISTER` | Request re-registration    |
 | 90002   | `PHOTON_SEND`     | Send message to Photon app |
+| 90003   | `PHOTON_STATUS`   | Request current status     |
 
 ### Outbound Channels (from PhotonDevice)
 
@@ -593,3 +610,117 @@ os.devices.subscribeToMessages((msg) => {
   }
 });
 ```
+
+## System Messages
+
+Photon OS reserves message types prefixed with `photon:` for system-level functionality. These messages are handled directly by the OS rather than being forwarded to apps.
+
+### Suggesting App Installation
+
+Devices can prompt users to install an app on their Photon Tool by sending a `photon:suggest_app_install` message. This displays an install confirmation dialog showing which device is making the suggestion.
+
+**Message Format:**
+
+| Field      | Type   | Description                      |
+| ---------- | ------ | -------------------------------- |
+| `bundleId` | string | Unique app identifier            |
+| `name`     | string | Display name for the app         |
+| `author`   | string | App author/developer name        |
+| `url`      | string | URL where the app is hosted      |
+
+### SuggestAppInstall.lsl
+
+This example script demonstrates how to suggest an app installation. When the owner touches the object, it sends the install suggestion to their Photon Tool.
+
+```
+// ============================================
+// SuggestAppInstall.lsl - Example Script
+// ============================================
+// This script demonstrates how to prompt the
+// device owner to install an app on their
+// Photon Tool.
+//
+// REQUIREMENTS:
+// - PhotonDevice.lsl must be in the same object
+// - Object owner must have their SL account linked
+//   to their Photon OS account
+//
+// USAGE:
+// Touch the object to suggest installing the app.
+
+// Link message channels (must match PhotonDevice.lsl)
+integer PHOTON_SEND = 90002;
+integer PHOTON_STATUS = 90003;
+integer PHOTON_REGISTERED = 90010;
+integer PHOTON_OFFLINE = 90011;
+integer PHOTON_ERROR = 90019;
+
+// Track registration state
+integer gRegistered = FALSE;
+
+// App details - customize these for your app
+string APP_BUNDLE_ID = "com.example.myapp";
+string APP_NAME = "My Cool App";
+string APP_AUTHOR = "Your Name";
+string APP_URL = "https://example.com/myapp";
+
+suggestAppInstall()
+{
+    if (!gRegistered)
+    {
+        llOwnerSay("Not connected to Photon yet. Please wait...");
+        return;
+    }
+
+    string payload = llList2Json(JSON_OBJECT, [
+        "bundleId", APP_BUNDLE_ID,
+        "name", APP_NAME,
+        "author", APP_AUTHOR,
+        "url", APP_URL
+    ]);
+
+    llMessageLinked(LINK_SET, PHOTON_SEND, "photon:suggest_app_install", payload);
+    llOwnerSay("Sent app install suggestion to your Photon Tool!");
+}
+
+default
+{
+    state_entry()
+    {
+        llOwnerSay("Touch me to suggest installing " + APP_NAME);
+        // Request current status in case PhotonDevice already registered
+        llMessageLinked(LINK_SET, PHOTON_STATUS, "", "");
+    }
+
+    touch_start(integer num)
+    {
+        if (llDetectedKey(0) == llGetOwner())
+        {
+            suggestAppInstall();
+        }
+    }
+
+    link_message(integer sender, integer num, string str, key id)
+    {
+        if (num == PHOTON_REGISTERED)
+        {
+            gRegistered = TRUE;
+            llOwnerSay("Connected to Photon! Touch me to suggest installing " + APP_NAME);
+        }
+        else if (num == PHOTON_OFFLINE)
+        {
+            gRegistered = FALSE;
+        }
+        else if (num == PHOTON_ERROR)
+        {
+            llOwnerSay("Photon error: " + (string)id);
+        }
+    }
+}
+```
+
+**Key points:**
+
+- Uses `PHOTON_STATUS` on startup to check if already registered (handles race condition with PhotonDevice.lsl)
+- Sends the `photon:suggest_app_install` message type with app details as JSON payload
+- The user sees a dialog showing the device name and app info before confirming installation

@@ -11,15 +11,30 @@ import { Button } from "../ui/button";
 
 export function InstallAppDrawer({
   app,
+  suggestedBy,
   type = "permanent",
   onInstall,
   onDecline,
 }: {
   app: AppDefinition | null;
+  suggestedBy?: {
+    deviceId: string;
+    objectName: string;
+  };
   type: "permanent" | "temporary";
   onInstall: () => void;
   onDecline: () => void;
 }) {
+  const getDescription = () => {
+    if (suggestedBy) {
+      return `${suggestedBy.objectName} is suggesting you install ${app?.name} by ${app?.author}. Only install apps you trust.`;
+    }
+    if (type === "permanent") {
+      return `An app called ${app?.name} by ${app?.author} is requesting to be installed on your device. Only install apps you trust.`;
+    }
+    return `An app called ${app?.name} by ${app?.author} is requesting to temporarily run on your device to enhance your experience in this location. Only run apps you trust.`;
+  };
+
   return (
     <Drawer open={Boolean(app)} onClose={onDecline}>
       <DrawerContent>
@@ -30,13 +45,7 @@ export function InstallAppDrawer({
                 ? `Install ${app?.name}`
                 : `Run ${app?.name}`}
             </DrawerTitle>
-            <DrawerDescription>
-              {type === "permanent"
-                ? `An app called ${app?.name} by ${app?.author} is requesting to be
-              installed on your device. Only install apps you trust.`
-                : `An app called ${app?.name} by ${app?.author} is requesting to temporarily run on your device to enhance your 
-              experience in this location. Only run apps you trust.`}
-            </DrawerDescription>
+            <DrawerDescription>{getDescription()}</DrawerDescription>
           </DrawerHeader>
           <DrawerFooter>
             <Button onClick={onInstall} size="lg">

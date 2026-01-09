@@ -94,20 +94,44 @@ Deno.serve(async (req) => {
     }
 
     // Broadcast message via Supabase Realtime
-    const channel = supabase.channel(`sl-messages:${linkedAccount.user_id}`);
+    const channelName = `sl-messages:${linkedAccount.user_id}`;
+    console.log("[sl-device-message] Broadcasting to channel:", channelName);
 
-    await channel.send({
+    const channel = supabase.channel(channelName);
+
+    const broadcastPayload = {
+      device_id: device.id,
+      object_key: objectKey,
+      object_name: objectName || "Unknown",
+      type,
+      payload: payload || {},
+      timestamp: new Date().toISOString(),
+    };
+    console.log("[sl-device-message] Payload:", JSON.stringify(broadcastPayload));
+
+    // Subscribe to channel first (required for sending)
+    const subscribePromise = new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error("Subscribe timeout")), 5000);
+      channel.subscribe((status) => {
+        console.log("[sl-device-message] Subscribe status:", status);
+        if (status === "SUBSCRIBED") {
+          clearTimeout(timeout);
+          resolve();
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          clearTimeout(timeout);
+          reject(new Error(`Subscribe failed: ${status}`));
+        }
+      });
+    });
+
+    await subscribePromise;
+
+    const sendResult = await channel.send({
       type: "broadcast",
       event: "device_message",
-      payload: {
-        device_id: device.id,
-        object_key: objectKey,
-        object_name: objectName || "Unknown",
-        type,
-        payload: payload || {},
-        timestamp: new Date().toISOString(),
-      },
+      payload: broadcastPayload,
     });
+    console.log("[sl-device-message] Send result:", sendResult);
 
     // Unsubscribe from channel after sending
     await supabase.removeChannel(channel);

@@ -7,6 +7,7 @@ import {
   useState,
   type PropsWithChildren,
 } from "react";
+import { useLocation } from "react-router";
 import type {
   AppBundleId,
   AppDefinition,
@@ -45,7 +46,16 @@ import {
   sendMessageToDevice,
   subscribeToDeviceMessages,
   unsubscribeFromDeviceMessages,
+  addDeviceMessageListener,
 } from "../supabase/slDevices";
+
+type InstallAppRequest = {
+  app: AppDefinition;
+  suggestedBy?: {
+    deviceId: string;
+    objectName: string;
+  };
+};
 
 export const LAUNCHER_APP: AppDefinition = {
   bundleId: "com.hydrais.photon.launcher",
@@ -86,7 +96,7 @@ export const OperatingSystemContext = createContext<OperatingSystemContextType>(
 export function OperatingSystemProvider({ children }: PropsWithChildren) {
   const [apiLoading, setApiLoading] = useState(true);
   const [installAppRequest, setInstallAppRequest] =
-    useState<AppDefinition | null>(null);
+    useState<InstallAppRequest | null>(null);
   const [uninstallAppRequest, setUninstallAppRequest] =
     useState<AppDefinition | null>(null);
   const [multitasking, setMultitasking] = useState(false);
@@ -95,6 +105,10 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
   const lastMessageSourceRef = useRef<Window | null>(null);
 
   const { user } = useAuth();
+  const location = useLocation();
+
+  // Only render system drawers at the root path (not in system app iframes)
+  const isRootShell = location.pathname === "/";
 
   const {
     runningApps,
@@ -149,7 +163,7 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
         foregroundApp(app);
       },
       async apps_requestAppInstall(app) {
-        setInstallAppRequest(app);
+        setInstallAppRequest({ app });
       },
       async apps_requestAppUninstall(app) {
         setUninstallAppRequest(app);
@@ -258,6 +272,57 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
     setApiLoading(false);
   }, [api]);
 
+  // OS-level device message subscription for system messages
+  useEffect(() => {
+    if (!user) {
+      console.log("[OS] No user, skipping device message subscription");
+      return;
+    }
+
+    console.log("[OS] Setting up device message listener for user:", user.id);
+    const unsubscribe = addDeviceMessageListener(user.id, (message) => {
+      console.log("[OS] Received device message:", message.type, message);
+      if (message.type === "photon:suggest_app_install") {
+        const payload = message.payload as {
+          bundleId?: string;
+          name?: string;
+          author?: string;
+          url?: string;
+        };
+
+        // Validate required fields
+        if (!payload.bundleId || !payload.name || !payload.author || !payload.url) {
+          console.warn("Invalid suggest_app_install payload from device:", message.deviceId);
+          return;
+        }
+
+        // Check if already installed
+        const alreadyInstalled = installedApps.some(
+          (app) => app.bundleId === payload.bundleId
+        );
+        if (alreadyInstalled) {
+          return;
+        }
+
+        // Show install drawer with device info
+        setInstallAppRequest({
+          app: {
+            bundleId: payload.bundleId,
+            name: payload.name,
+            author: payload.author,
+            url: payload.url,
+          },
+          suggestedBy: {
+            deviceId: message.deviceId,
+            objectName: message.objectName,
+          },
+        });
+      }
+    });
+
+    return unsubscribe;
+  }, [user, installedApps]);
+
   const loading = apiLoading || isLoadingApps;
 
   return (
@@ -281,25 +346,30 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
       ) : (
         <>
           {children}
-          <InstallAppDrawer
-            app={installAppRequest}
-            type="permanent"
-            onDecline={() => setInstallAppRequest(null)}
-            onInstall={() => {
-              if (!installAppRequest) return;
-              installApp(installAppRequest);
-              setInstallAppRequest(null);
-            }}
-          />
-          <UninstallAppDrawer
-            app={uninstallAppRequest}
-            onDecline={() => setUninstallAppRequest(null)}
-            onUninstall={() => {
-              if (!uninstallAppRequest) return;
-              uninstallApp(uninstallAppRequest);
-              setUninstallAppRequest(null);
-            }}
-          />
+          {isRootShell && (
+            <>
+              <InstallAppDrawer
+                app={installAppRequest?.app ?? null}
+                suggestedBy={installAppRequest?.suggestedBy}
+                type="permanent"
+                onDecline={() => setInstallAppRequest(null)}
+                onInstall={() => {
+                  if (!installAppRequest?.app) return;
+                  installApp(installAppRequest.app);
+                  setInstallAppRequest(null);
+                }}
+              />
+              <UninstallAppDrawer
+                app={uninstallAppRequest}
+                onDecline={() => setUninstallAppRequest(null)}
+                onUninstall={() => {
+                  if (!uninstallAppRequest) return;
+                  uninstallApp(uninstallAppRequest);
+                  setUninstallAppRequest(null);
+                }}
+              />
+            </>
+          )}
         </>
       )}
     </OperatingSystemContext.Provider>

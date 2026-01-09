@@ -14,6 +14,7 @@
 // The script registers automatically on startup.
 // Send link messages to this script:
 //   llMessageLinked(LINK_SET, PHOTON_SEND, "message_type", "json_payload");
+//   llMessageLinked(LINK_SET, PHOTON_STATUS, "", "");  // Request current status
 //
 // Receive link messages from this script:
 //   PHOTON_REGISTERED - Registration confirmed (key = device_id)
@@ -27,6 +28,7 @@
 // Inbound (to PhotonDevice)
 integer PHOTON_REGISTER = 90001;   // Request registration
 integer PHOTON_SEND = 90002;       // Send message to Photon
+integer PHOTON_STATUS = 90003;     // Request current status
 
 // Outbound (from PhotonDevice)
 integer PHOTON_REGISTERED = 90010; // Registration confirmed (key = device_id)
@@ -285,6 +287,20 @@ default
         if (num == PHOTON_SEND)
         {
             sendMessageToPhoton(str, (string)id);
+            return;
+        }
+
+        if (num == PHOTON_STATUS)
+        {
+            // Respond with current status
+            if (gRegistered)
+            {
+                broadcast(PHOTON_REGISTERED, "registered", gDeviceId);
+            }
+            else
+            {
+                broadcast(PHOTON_OFFLINE, "offline", "");
+            }
             return;
         }
     }

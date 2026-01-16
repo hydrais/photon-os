@@ -148,6 +148,29 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
   installedAppsRef.current = installedApps;
   appIframeRefsRef.current = appIframeRefs;
 
+  // Track loading state for RPC calls that need to wait for apps to load
+  const isLoadingAppsRef = useRef(isLoadingApps);
+  const appsLoadedResolversRef = useRef<Array<() => void>>([]);
+  isLoadingAppsRef.current = isLoadingApps;
+
+  // Resolve any pending waiters when loading completes
+  useEffect(() => {
+    if (!isLoadingApps && appsLoadedResolversRef.current.length > 0) {
+      appsLoadedResolversRef.current.forEach((resolve) => resolve());
+      appsLoadedResolversRef.current = [];
+    }
+  }, [isLoadingApps]);
+
+  // Helper to wait for apps to finish loading
+  const waitForAppsLoaded = useCallback((): Promise<void> => {
+    if (!isLoadingAppsRef.current) {
+      return Promise.resolve();
+    }
+    return new Promise((resolve) => {
+      appsLoadedResolversRef.current.push(resolve);
+    });
+  }, []);
+
   // Capture message source before pm-rpc processes it
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -263,7 +286,8 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
         foregroundApp(LAUNCHER_APP);
       },
       async apps_getInstalledApps() {
-        return installedApps;
+        await waitForAppsLoaded();
+        return installedAppsRef.current;
       },
       async apps_launchApp(app) {
         launchApp(app);
@@ -383,7 +407,7 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
         invalidatePermissionCache(bundleId);
       },
     }),
-    [installedApps, runningApps, user, identifyCallingApp, checkPermission, invalidatePermissionCache]
+    [installedApps, runningApps, user, identifyCallingApp, checkPermission, invalidatePermissionCache, waitForAppsLoaded]
   );
 
   useEffect(() => {

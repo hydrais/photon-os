@@ -48,9 +48,13 @@ export function Launcher() {
     return () => window.removeEventListener("focus", handleFocus);
   }, [refresh]);
 
-  const filteredApps = installedApps.filter(
-    (a) => !FILTERED_BUNDLE_IDS.includes(a.bundleId)
-  );
+  // Show system apps immediately while loading, then show all apps once loaded
+  const appsToShow = loading
+    ? SYSTEM_APPS.filter((a) => !FILTERED_BUNDLE_IDS.includes(a.bundleId))
+    : installedApps.filter((a) => !FILTERED_BUNDLE_IDS.includes(a.bundleId));
+
+  // Debug logging
+  console.log("[Launcher] loading:", loading, "installedApps:", installedApps.length, "appsToShow:", appsToShow.length);
 
   const launchApp = async (app: AppDefinition) => {
     const os = new OS();
@@ -75,11 +79,7 @@ export function Launcher() {
       }
     >
       <div className="flex-1 overflow-auto p-6 pt-12">
-        {loading ? (
-          <div className="flex items-center justify-center h-full text-background">
-            <Spinner className="size-6" />
-          </div>
-        ) : filteredApps.length === 0 ? (
+        {appsToShow.length === 0 && !loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-white/70 text-center">
               <p className="text-lg">No apps installed</p>
@@ -88,7 +88,7 @@ export function Launcher() {
           </div>
         ) : (
           <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-6 justify-items-center">
-            {filteredApps.map((app) => (
+            {appsToShow.map((app) => (
               <AppIcon
                 key={app.bundleId}
                 app={app}
@@ -101,6 +101,16 @@ export function Launcher() {
           </div>
         )}
       </div>
+
+      {/* Subtle loading indicator at the bottom */}
+      {loading && (
+        <div className="fixed bottom-24 left-0 right-0 flex justify-center z-50 pointer-events-none">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/40 backdrop-blur-sm">
+            <Spinner className="size-4 text-white" />
+            <span className="text-white text-sm">Loading apps...</span>
+          </div>
+        </div>
+      )}
 
       <Drawer
         open={selectedApp !== null}

@@ -25,18 +25,10 @@ function AppIframe({
 }) {
   const refCallback = useCallback(
     (e: HTMLIFrameElement | null) => {
-      console.log(`[AppIframe] refCallback for ${app.definition.bundleId}:`, e ? 'element' : 'null');
       setAppIframeRef(app.definition.bundleId, e);
     },
     [app.definition.bundleId, setAppIframeRef]
   );
-
-  useEffect(() => {
-    console.log(`[AppIframe] MOUNTED: ${app.definition.bundleId}`);
-    return () => {
-      console.log(`[AppIframe] UNMOUNTED: ${app.definition.bundleId}`);
-    };
-  }, [app.definition.bundleId]);
 
   return (
     <iframe
@@ -77,12 +69,29 @@ export function AppView({
     (app) => app.definition.bundleId === LAUNCHER_APP.bundleId
   );
 
-  // Sort apps by lastForegroundedAt (oldest first, most recent on the right)
+  // Non-launcher apps in stable order (for iframe rendering)
   const nonLauncherApps = useMemo(() => {
-    return runningApps
-      .filter((app) => app.definition.bundleId !== LAUNCHER_APP.bundleId)
-      .sort((a, b) => a.lastForegroundedAt.getTime() - b.lastForegroundedAt.getTime());
+    return runningApps.filter(
+      (app) => app.definition.bundleId !== LAUNCHER_APP.bundleId
+    );
   }, [runningApps]);
+
+  // Sorted apps for multitasking view (oldest first, most recent on the right)
+  const sortedAppsForMultitasking = useMemo(() => {
+    return [...nonLauncherApps].sort(
+      (a, b) => a.lastForegroundedAt.getTime() - b.lastForegroundedAt.getTime()
+    );
+  }, [nonLauncherApps]);
+
+  // Get the sort index for a given app (for card positioning)
+  const getSortIndex = useCallback(
+    (bundleId: string) => {
+      return sortedAppsForMultitasking.findIndex(
+        (app) => app.definition.bundleId === bundleId
+      );
+    },
+    [sortedAppsForMultitasking]
+  );
 
   // Track container size for positioning calculations
   useLayoutEffect(() => {
@@ -183,9 +192,10 @@ export function AppView({
         </div>
       )}
 
-      {/* App iframes - always rendered in stable structure */}
-      {nonLauncherApps.map((app, index) => {
-        const cardTransform = getCardTransform(index);
+      {/* App iframes - rendered in stable order (not sorted) to preserve iframe state */}
+      {nonLauncherApps.map((app) => {
+        const sortIndex = getSortIndex(app.definition.bundleId);
+        const cardTransform = getCardTransform(sortIndex);
 
         // In multitasking: position as cards
         // In normal mode: fullscreen with visibility based on isInBackground
@@ -230,7 +240,7 @@ export function AppView({
       {/* Multitasking UI overlay - card headers and backgrounds */}
       {showMultitasking && (
         <div className="absolute inset-0 z-30 flex items-center pointer-events-none">
-          {nonLauncherApps.length === 0 ? (
+          {sortedAppsForMultitasking.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
               <span className="text-background/60 text-lg">
                 No apps running
@@ -246,7 +256,7 @@ export function AppView({
               onMouseLeave={handleMouseUp}
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
-              {nonLauncherApps.map((app) => (
+              {sortedAppsForMultitasking.map((app) => (
                 <div
                   key={app.definition.bundleId}
                   className="flex-shrink-0 flex flex-col cursor-pointer"

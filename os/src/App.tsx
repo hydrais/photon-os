@@ -9,13 +9,19 @@ import { Settings } from "./Settings";
 function AuthenticatedApp() {
   return (
     <AuthProvider>
-      <OperatingSystemProvider>
-        <Routes>
-          <Route path="/" element={<System />} />
-          <Route path="/__launcher" element={<Launcher />} />
-          <Route path="/__settings" element={<Settings />} />
-        </Routes>
-      </OperatingSystemProvider>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <OperatingSystemProvider>
+              <System />
+            </OperatingSystemProvider>
+          }
+        />
+        {/* System apps are standalone - they communicate via SDK/RPC */}
+        <Route path="/__launcher" element={<Launcher />} />
+        <Route path="/__settings" element={<Settings />} />
+      </Routes>
     </AuthProvider>
   );
 }

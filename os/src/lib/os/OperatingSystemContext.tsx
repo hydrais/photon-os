@@ -131,14 +131,6 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
   // Only render system drawers at the root path (not in system app iframes)
   const isRootShell = location.pathname === "/";
 
-  // Debug: track provider mount/unmount
-  useEffect(() => {
-    console.log(`[OS] OperatingSystemProvider MOUNTED at ${location.pathname}`);
-    return () => {
-      console.log(`[OS] OperatingSystemProvider UNMOUNTED at ${location.pathname}`);
-    };
-  }, [location.pathname]);
-
   const {
     runningApps,
     installedApps,
@@ -452,11 +444,6 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
 
   const loading = apiLoading || isLoadingApps;
 
-  // Debug: track loading state changes
-  useEffect(() => {
-    console.log(`[OS] loading=${loading} (apiLoading=${apiLoading}, isLoadingApps=${isLoadingApps}), path=${location.pathname}`);
-  }, [loading, apiLoading, isLoadingApps, location.pathname]);
-
   // Memoize context value to prevent unnecessary consumer re-renders
   const contextValue = useMemo(
     () => ({
@@ -487,52 +474,52 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
 
   return (
     <OperatingSystemContext.Provider value={contextValue}>
-      {loading ? (
-        <div className="fixed inset-0 flex items-center justify-center bg-foreground text-background">
-          <Spinner />
-        </div>
-      ) : (
+      {/* Always render children to preserve iframe state */}
+      <div className={loading ? "hidden" : undefined}>
+        {children}
+      </div>
+      {isRootShell && (
         <>
-          {children}
-          {isRootShell && (
-            <>
-              <InstallAppDrawer
-                app={installAppRequest?.app ?? null}
-                suggestedBy={installAppRequest?.suggestedBy}
-                type="permanent"
-                onDecline={() => setInstallAppRequest(null)}
-                onInstall={() => {
-                  if (!installAppRequest?.app) return;
-                  installApp(installAppRequest.app);
-                  setInstallAppRequest(null);
-                }}
-              />
-              <UninstallAppDrawer
-                app={uninstallAppRequest}
-                onDecline={() => setUninstallAppRequest(null)}
-                onUninstall={() => {
-                  if (!uninstallAppRequest) return;
-                  uninstallApp(uninstallAppRequest);
-                  setUninstallAppRequest(null);
-                }}
-              />
-              <PermissionDrawer
-                request={permissionRequest}
-                onAllow={() => {
-                  if (permissionRequest) {
-                    permissionRequest.resolve(true);
-                    setPermissionRequest(null);
-                  }
-                }}
-                onDeny={() => {
-                  if (permissionRequest) {
-                    permissionRequest.resolve(false);
-                    setPermissionRequest(null);
-                  }
-                }}
-              />
-            </>
+          {loading && (
+            <div className="fixed inset-0 flex items-center justify-center bg-foreground text-background">
+              <Spinner />
+            </div>
           )}
+          <InstallAppDrawer
+            app={installAppRequest?.app ?? null}
+            suggestedBy={installAppRequest?.suggestedBy}
+            type="permanent"
+            onDecline={() => setInstallAppRequest(null)}
+            onInstall={() => {
+              if (!installAppRequest?.app) return;
+              installApp(installAppRequest.app);
+              setInstallAppRequest(null);
+            }}
+          />
+          <UninstallAppDrawer
+            app={uninstallAppRequest}
+            onDecline={() => setUninstallAppRequest(null)}
+            onUninstall={() => {
+              if (!uninstallAppRequest) return;
+              uninstallApp(uninstallAppRequest);
+              setUninstallAppRequest(null);
+            }}
+          />
+          <PermissionDrawer
+            request={permissionRequest}
+            onAllow={() => {
+              if (permissionRequest) {
+                permissionRequest.resolve(true);
+                setPermissionRequest(null);
+              }
+            }}
+            onDeny={() => {
+              if (permissionRequest) {
+                permissionRequest.resolve(false);
+                setPermissionRequest(null);
+              }
+            }}
+          />
         </>
       )}
     </OperatingSystemContext.Provider>

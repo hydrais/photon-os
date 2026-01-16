@@ -3,7 +3,7 @@ import type {
   AppDefinition,
   AppBundleId,
 } from "@photon-os/sdk";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { LAUNCHER_APP, SYSTEM_APPS } from "../OperatingSystemContext";
 import {
   fetchInstalledApps,
@@ -30,6 +30,9 @@ export function useApps(userId: string | undefined) {
     Record<AppBundleId, HTMLIFrameElement>
   >({});
 
+  // Track whether initial load has completed to prevent loading flicker on re-renders
+  const hasInitiallyLoadedRef = useRef(false);
+
   // Load installed apps from Supabase when userId is available
   useEffect(() => {
     if (!userId) {
@@ -40,11 +43,15 @@ export function useApps(userId: string | undefined) {
     let cancelled = false;
 
     async function loadApps() {
-      setIsLoadingApps(true);
+      // Only show loading state on initial load, not on subsequent effect re-runs
+      if (!hasInitiallyLoadedRef.current) {
+        setIsLoadingApps(true);
+      }
       try {
         const userApps = await fetchInstalledApps();
         if (!cancelled) {
           setInstalledApps([...SYSTEM_APPS, ...userApps]);
+          hasInitiallyLoadedRef.current = true;
         }
       } catch (error) {
         console.error("Failed to load installed apps:", error);

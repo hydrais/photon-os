@@ -136,44 +136,56 @@ export function useApps(userId: string | undefined) {
     [userId, installedApps]
   );
 
-  const launchApp = (app: AppDefinition) => {
-    const runningApp = runningApps.find(
-      (a) => a.definition.bundleId === app.bundleId
-    );
-    if (runningApp) {
-      foregroundApp(app);
-      return;
-    }
-    const now = new Date();
-    setRunningApps([
-      ...runningApps.map((a) => ({ ...a, isInBackground: true })),
-      {
-        definition: app,
-        isInBackground: false,
-        startedAt: now,
-        lastForegroundedAt: now,
-      },
-    ]);
-  };
+  const foregroundApp = useCallback((app: AppDefinition) => {
+    setRunningApps((prev) => {
+      const runningApp = prev.find(
+        (a) => a.definition.bundleId === app.bundleId
+      );
+      if (!runningApp) throw new Error(`App not running: ${app.bundleId}`);
 
-  const foregroundApp = (app: AppDefinition) => {
-    const runningApp = runningApps.find(
-      (a) => a.definition.bundleId === app.bundleId
-    );
-    if (!runningApp) throw new Error(`App not running: ${app.bundleId}`);
-
-    const now = new Date();
-    setRunningApps(
-      runningApps.map((a) => ({
+      const now = new Date();
+      return prev.map((a) => ({
         ...a,
         isInBackground: a.definition.bundleId === app.bundleId ? false : true,
         lastForegroundedAt:
           a.definition.bundleId === app.bundleId ? now : a.lastForegroundedAt,
-      }))
-    );
-  };
+      }));
+    });
+  }, []);
 
-  const closeApp = (app: AppDefinition) => {
+  const launchApp = useCallback(
+    (app: AppDefinition) => {
+      setRunningApps((prev) => {
+        const runningApp = prev.find(
+          (a) => a.definition.bundleId === app.bundleId
+        );
+        if (runningApp) {
+          // App already running, foreground it
+          const now = new Date();
+          return prev.map((a) => ({
+            ...a,
+            isInBackground: a.definition.bundleId === app.bundleId ? false : true,
+            lastForegroundedAt:
+              a.definition.bundleId === app.bundleId ? now : a.lastForegroundedAt,
+          }));
+        }
+        // Launch new app
+        const now = new Date();
+        return [
+          ...prev.map((a) => ({ ...a, isInBackground: true })),
+          {
+            definition: app,
+            isInBackground: false,
+            startedAt: now,
+            lastForegroundedAt: now,
+          },
+        ];
+      });
+    },
+    []
+  );
+
+  const closeApp = useCallback((app: AppDefinition) => {
     if (app.bundleId === LAUNCHER_APP.bundleId) return;
     setRunningApps((prev) => {
       const filtered = prev.filter(
@@ -186,7 +198,7 @@ export function useApps(userId: string | undefined) {
       }
       return filtered;
     });
-  };
+  }, []);
 
   return {
     runningApps,

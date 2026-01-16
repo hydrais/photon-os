@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useInstalledApps } from "@photon-os/react";
 import { OS, type AppDefinition } from "@photon-os/sdk";
+import * as pmrpc from "pm-rpc";
+import type { PermissionType } from "@/lib/supabase/permissions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Drawer,
   DrawerContent,
@@ -12,8 +15,13 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Trash2, Plus } from "lucide-react";
+import { Trash2, Plus, ChevronDown, ChevronUp, Cpu } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
+import { useAuth } from "@/lib/auth/AuthContext";
+import {
+  fetchAllPermissionsForUser,
+  setPermission,
+} from "@/lib/supabase/permissions";
 
 const SYSTEM_BUNDLE_IDS = [
   "com.hydrais.photon.launcher",
@@ -22,13 +30,77 @@ const SYSTEM_BUNDLE_IDS = [
 
 export function AppsSection() {
   const { installedApps, loading, refresh } = useInstalledApps();
+  const { user } = useAuth();
   const [showInstallDrawer, setShowInstallDrawer] = useState(false);
+  const [expandedApp, setExpandedApp] = useState<string | null>(null);
+  const [appPermissions, setAppPermissions] = useState<
+    Record<string, Record<PermissionType, boolean | null>>
+  >({});
   const [installForm, setInstallForm] = useState({
     url: "",
     name: "",
     author: "",
     bundleId: "",
   });
+
+  // Load permissions for all apps
+  useEffect(() => {
+    if (!user) return;
+
+    fetchAllPermissionsForUser(user.id)
+      .then((permissions) => {
+        setAppPermissions(permissions);
+      })
+      .catch((error) => {
+        console.error("Failed to load permissions:", error);
+      });
+  }, [user]);
+
+  const handlePermissionToggle = async (
+    bundleId: string,
+    permissionType: PermissionType,
+    currentValue: boolean | null
+  ) => {
+    if (!user) return;
+
+    // If currently granted (true), we'll set to denied (false)
+    // If currently denied (false) or not requested (null), we'll grant it
+    const newValue = currentValue !== true;
+
+    // Optimistic update
+    setAppPermissions((prev) => ({
+      ...prev,
+      [bundleId]: {
+        ...(prev[bundleId] || { devices: null }),
+        [permissionType]: newValue,
+      },
+    }));
+
+    try {
+      // Set permission to true (granted) or false (denied)
+      await setPermission(user.id, bundleId, permissionType, newValue);
+
+      // Invalidate the OS permission cache via RPC
+      try {
+        const api = await pmrpc.api.request<{
+          permissions_invalidateCache: (bundleId?: string) => Promise<void>;
+        }>("photon_os", { target: window.parent });
+        await api.permissions_invalidateCache(bundleId);
+      } catch (rpcError) {
+        console.warn("Failed to invalidate permission cache via RPC:", rpcError);
+      }
+    } catch (error) {
+      console.error("Failed to update permission:", error);
+      // Rollback on error
+      setAppPermissions((prev) => ({
+        ...prev,
+        [bundleId]: {
+          ...(prev[bundleId] || { devices: null }),
+          [permissionType]: currentValue,
+        },
+      }));
+    }
+  };
 
   const userApps = installedApps.filter(
     (app) => !SYSTEM_BUNDLE_IDS.includes(app.bundleId)
@@ -102,27 +174,87 @@ export function AppsSection() {
         </div>
       ) : (
         <div className="flex flex-col gap-2">
-          {userApps.map((app) => (
-            <div
-              key={app.bundleId}
-              className="flex items-center gap-4 p-4 rounded-2xl bg-card ring-1 ring-foreground/10"
-            >
-              <div className="flex-1 min-w-0">
-                <div className="font-medium">{app.name}</div>
-                <div className="text-sm text-muted-foreground">
-                  by {app.author}
-                </div>
-              </div>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={() => handleUninstall(app)}
+          {userApps.map((app) => {
+            const isExpanded = expandedApp === app.bundleId;
+            const permissions = appPermissions[app.bundleId] || {
+              devices: null,
+            };
+
+            return (
+              <div
+                key={app.bundleId}
+                className="rounded-2xl bg-card ring-1 ring-foreground/10 overflow-hidden"
               >
-                <Trash2 className="size-4 mr-1.5" />
-                Uninstall
-              </Button>
-            </div>
-          ))}
+                <button
+                  className="flex items-center gap-4 p-4 w-full text-left"
+                  onClick={() =>
+                    setExpandedApp(isExpanded ? null : app.bundleId)
+                  }
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium">{app.name}</div>
+                    <div className="text-sm text-muted-foreground">
+                      by {app.author}
+                    </div>
+                  </div>
+                  {isExpanded ? (
+                    <ChevronUp className="size-5 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="size-5 text-muted-foreground" />
+                  )}
+                </button>
+
+                {isExpanded && (
+                  <div className="px-4 pb-4 border-t border-foreground/5">
+                    <div className="pt-4">
+                      <h4 className="text-sm font-medium text-muted-foreground mb-3">
+                        Permissions
+                      </h4>
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
+                        <div className="flex items-center gap-3">
+                          <Cpu className="size-5 text-muted-foreground" />
+                          <div>
+                            <div className="text-sm font-medium">
+                              Device Access
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {permissions.devices === true
+                                ? "Allowed"
+                                : permissions.devices === false
+                                  ? "Denied"
+                                  : "Not requested"}
+                            </div>
+                          </div>
+                        </div>
+                        <Switch
+                          checked={permissions.devices === true}
+                          onCheckedChange={() =>
+                            handlePermissionToggle(
+                              app.bundleId,
+                              "devices",
+                              permissions.devices
+                            )
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-foreground/5">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleUninstall(app)}
+                        className="w-full"
+                      >
+                        <Trash2 className="size-4 mr-1.5" />
+                        Uninstall App
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 

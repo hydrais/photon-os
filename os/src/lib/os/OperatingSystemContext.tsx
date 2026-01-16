@@ -21,12 +21,21 @@ import type {
   SendMessageResult,
   DeviceMessage,
 } from "@photon-os/sdk";
+import type { PermissionType } from "../supabase/permissions";
 import { useApps } from "./hooks/useApps";
 import { useAuth } from "../auth/AuthContext";
 import { Spinner } from "@/components/ui/spinner";
 import * as pmrpc from "pm-rpc";
 import { InstallAppDrawer } from "@/components/system/install-app-drawer";
 import { UninstallAppDrawer } from "@/components/system/uninstall-app-drawer";
+import {
+  PermissionDrawer,
+  type PermissionRequest,
+} from "@/components/system/permission-drawer";
+import {
+  fetchPermission,
+  setPermission,
+} from "../supabase/permissions";
 import {
   fetchSandboxedPreference,
   setSandboxedPreference,
@@ -87,6 +96,7 @@ type OperatingSystemContextType = {
   closeApp: (app: AppDefinition) => void;
   multitasking: boolean;
   setMultitasking: (value: boolean) => void;
+  invalidatePermissionCache: (bundleId?: string) => void;
 };
 
 export const OperatingSystemContext = createContext<OperatingSystemContextType>(
@@ -100,15 +110,34 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
   const [uninstallAppRequest, setUninstallAppRequest] =
     useState<AppDefinition | null>(null);
   const [multitasking, setMultitasking] = useState(false);
+  const [permissionRequest, setPermissionRequest] =
+    useState<PermissionRequest | null>(null);
+
+  // Cache for permission checks: "bundleId:permissionType" -> boolean | null
+  const permissionCacheRef = useRef<Map<string, boolean | null>>(new Map());
 
   // Track the last message source for identifying calling apps
   const lastMessageSourceRef = useRef<Window | null>(null);
+
+  // Ref to access installedApps without causing callback recreation
+  const installedAppsRef = useRef<AppDefinition[]>([]);
+
+  // Ref to access appIframeRefs without causing callback recreation
+  const appIframeRefsRef = useRef<Record<AppBundleId, HTMLIFrameElement>>({});
 
   const { user } = useAuth();
   const location = useLocation();
 
   // Only render system drawers at the root path (not in system app iframes)
   const isRootShell = location.pathname === "/";
+
+  // Debug: track provider mount/unmount
+  useEffect(() => {
+    console.log(`[OS] OperatingSystemProvider MOUNTED at ${location.pathname}`);
+    return () => {
+      console.log(`[OS] OperatingSystemProvider UNMOUNTED at ${location.pathname}`);
+    };
+  }, [location.pathname]);
 
   const {
     runningApps,
@@ -122,6 +151,10 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
     uninstallApp,
     isLoadingApps,
   } = useApps(user?.id);
+
+  // Keep refs in sync for use in callbacks without causing recreation
+  installedAppsRef.current = installedApps;
+  appIframeRefsRef.current = appIframeRefs;
 
   // Capture message source before pm-rpc processes it
   useEffect(() => {
@@ -139,13 +172,98 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
     const source = lastMessageSourceRef.current;
     if (!source) return null;
 
-    for (const [bundleId, iframe] of Object.entries(appIframeRefs)) {
+    // Use ref to avoid dependency on appIframeRefs
+    for (const [bundleId, iframe] of Object.entries(appIframeRefsRef.current)) {
       if (iframe.contentWindow === source) {
         return bundleId;
       }
     }
     return null;
-  }, [appIframeRefs]);
+  }, []);
+
+  // Invalidate permission cache (called when permissions change in Settings)
+  const invalidatePermissionCache = useCallback((bundleId?: string) => {
+    if (bundleId) {
+      // Invalidate specific app's permissions
+      for (const key of permissionCacheRef.current.keys()) {
+        if (key.startsWith(`${bundleId}:`)) {
+          permissionCacheRef.current.delete(key);
+        }
+      }
+    } else {
+      // Invalidate all cached permissions
+      permissionCacheRef.current.clear();
+    }
+  }, []);
+
+  // Check if an app has a specific permission
+  const checkPermission = useCallback(
+    async (permissionType: PermissionType): Promise<void> => {
+      if (!user) throw new Error("Not authenticated");
+
+      const bundleId = identifyCallingApp();
+      if (!bundleId) throw new Error("Could not identify calling app");
+
+      // System apps bypass permission checks
+      if (SYSTEM_APPS.some((app) => app.bundleId === bundleId)) {
+        return;
+      }
+
+      const cacheKey = `${bundleId}:${permissionType}`;
+
+      // Check cache first
+      if (permissionCacheRef.current.has(cacheKey)) {
+        const cached = permissionCacheRef.current.get(cacheKey);
+        if (cached === true) return;
+        if (cached === false) {
+          throw new Error(
+            `Permission "${permissionType}" denied for app "${bundleId}"`
+          );
+        }
+        // cached === null means not yet requested, fall through to prompt
+      }
+
+      // Query database if not cached
+      let permission = permissionCacheRef.current.get(cacheKey);
+      if (permission === undefined) {
+        permission = await fetchPermission(user.id, bundleId, permissionType);
+        permissionCacheRef.current.set(cacheKey, permission);
+      }
+
+      // If already granted or denied, handle accordingly
+      if (permission === true) return;
+      if (permission === false) {
+        throw new Error(
+          `Permission "${permissionType}" denied for app "${bundleId}"`
+        );
+      }
+
+      // Permission not yet requested - show prompt and await user response
+      // Use ref to avoid dependency on installedApps (only used for display name)
+      const appDef = installedAppsRef.current.find((app) => app.bundleId === bundleId);
+      const appName = appDef?.name || bundleId;
+
+      const granted = await new Promise<boolean>((resolve) => {
+        setPermissionRequest({
+          bundleId,
+          appName,
+          permissionType,
+          resolve,
+        });
+      });
+
+      // Store decision in DB and update cache
+      await setPermission(user.id, bundleId, permissionType, granted);
+      permissionCacheRef.current.set(cacheKey, granted);
+
+      if (!granted) {
+        throw new Error(
+          `Permission "${permissionType}" denied for app "${bundleId}"`
+        );
+      }
+    },
+    [user]
+  );
 
   const api: OperatingSystemAPI = useMemo(
     () => ({
@@ -240,6 +358,7 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
       // Second Life Devices API
       async devices_getRegistered(): Promise<SLDevice[]> {
         if (!user) throw new Error("Not authenticated");
+        await checkPermission("devices");
         return await fetchRegisteredDevices(user.id);
       },
       async devices_sendMessage(
@@ -248,23 +367,31 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
         payload: Record<string, unknown>
       ): Promise<SendMessageResult> {
         if (!user) throw new Error("Not authenticated");
+        await checkPermission("devices");
         return await sendMessageToDevice(deviceId, type, payload);
       },
       async devices_unregister(deviceId: string): Promise<void> {
         if (!user) throw new Error("Not authenticated");
+        await checkPermission("devices");
         await deleteRegisteredDevice(user.id, deviceId);
       },
       async devices_subscribe(
         callback: (message: DeviceMessage) => void
       ): Promise<void> {
         if (!user) throw new Error("Not authenticated");
+        await checkPermission("devices");
         subscribeToDeviceMessages(user.id, callback);
       },
       async devices_unsubscribe(): Promise<void> {
         unsubscribeFromDeviceMessages();
       },
+
+      // Permissions API (for Settings app)
+      async permissions_invalidateCache(bundleId?: string): Promise<void> {
+        invalidatePermissionCache(bundleId);
+      },
     }),
-    [installedApps, runningApps, user, identifyCallingApp]
+    [installedApps, runningApps, user, identifyCallingApp, checkPermission, invalidatePermissionCache]
   );
 
   useEffect(() => {
@@ -325,20 +452,41 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
 
   const loading = apiLoading || isLoadingApps;
 
+  // Debug: track loading state changes
+  useEffect(() => {
+    console.log(`[OS] loading=${loading} (apiLoading=${apiLoading}, isLoadingApps=${isLoadingApps}), path=${location.pathname}`);
+  }, [loading, apiLoading, isLoadingApps, location.pathname]);
+
+  // Memoize context value to prevent unnecessary consumer re-renders
+  const contextValue = useMemo(
+    () => ({
+      api,
+      runningApps,
+      installedApps,
+      appIframeRefs,
+      setAppIframeRef,
+      foregroundApp,
+      closeApp,
+      multitasking,
+      setMultitasking,
+      invalidatePermissionCache,
+    }),
+    [
+      api,
+      runningApps,
+      installedApps,
+      appIframeRefs,
+      setAppIframeRef,
+      foregroundApp,
+      closeApp,
+      multitasking,
+      setMultitasking,
+      invalidatePermissionCache,
+    ]
+  );
+
   return (
-    <OperatingSystemContext.Provider
-      value={{
-        api,
-        runningApps,
-        installedApps,
-        appIframeRefs,
-        setAppIframeRef,
-        foregroundApp,
-        closeApp,
-        multitasking,
-        setMultitasking,
-      }}
-    >
+    <OperatingSystemContext.Provider value={contextValue}>
       {loading ? (
         <div className="fixed inset-0 flex items-center justify-center bg-foreground text-background">
           <Spinner />
@@ -366,6 +514,21 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
                   if (!uninstallAppRequest) return;
                   uninstallApp(uninstallAppRequest);
                   setUninstallAppRequest(null);
+                }}
+              />
+              <PermissionDrawer
+                request={permissionRequest}
+                onAllow={() => {
+                  if (permissionRequest) {
+                    permissionRequest.resolve(true);
+                    setPermissionRequest(null);
+                  }
+                }}
+                onDeny={() => {
+                  if (permissionRequest) {
+                    permissionRequest.resolve(false);
+                    setPermissionRequest(null);
+                  }
                 }}
               />
             </>

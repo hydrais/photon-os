@@ -14,6 +14,7 @@ import {
   WifiIcon,
   WifiOffIcon,
   HelpCircleIcon,
+  ShieldOffIcon,
 } from "lucide-react";
 
 const os = new OS();
@@ -28,6 +29,7 @@ function findPhotonTool(devices: SLDevice[]): SLDevice | undefined {
 
 export function MainScreen() {
   const [loading, setLoading] = useState(true);
+  const [permissionDenied, setPermissionDenied] = useState(false);
   const [connectedDevice, setConnectedDevice] = useState<SLDevice | null>(null);
   const [command, setCommand] = useState("");
   const [sending, setSending] = useState(false);
@@ -38,20 +40,36 @@ export function MainScreen() {
 
   // Load devices and saved history
   useEffect(() => {
-    Promise.all([
-      os.devices.getRegisteredDevices(),
-      os.prefs.get(HISTORY_KEY),
-    ]).then(([devices, savedHistory]) => {
-      const device = findPhotonTool(devices);
-      setConnectedDevice(device ?? null);
-      if (
-        Array.isArray(savedHistory) &&
-        savedHistory.every((item) => typeof item === "string")
-      ) {
-        setCommandHistory(savedHistory as string[]);
+    const loadData = async () => {
+      try {
+        const [devices, savedHistory] = await Promise.all([
+          os.devices.getRegisteredDevices(),
+          os.prefs.get(HISTORY_KEY),
+        ]);
+        const device = findPhotonTool(devices);
+        setConnectedDevice(device ?? null);
+        if (
+          Array.isArray(savedHistory) &&
+          savedHistory.every((item) => typeof item === "string")
+        ) {
+          setCommandHistory(savedHistory as string[]);
+        }
+      } catch (err) {
+        // Check if this is a permission denied error
+        if (
+          err instanceof Error &&
+          err.message.includes("Permission") &&
+          err.message.includes("denied")
+        ) {
+          setPermissionDenied(true);
+        } else {
+          console.error("Failed to load devices:", err);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
+    loadData();
   }, []);
 
   // Save history when it changes
@@ -120,6 +138,23 @@ export function MainScreen() {
     return (
       <div className="fixed inset-0 bg-stone-100 flex items-center justify-center">
         <Spinner className="text-stone-400" />
+      </div>
+    );
+  }
+
+  // Permission denied
+  if (permissionDenied) {
+    return (
+      <div className="fixed inset-0 bg-stone-100 flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center mb-4">
+          <ShieldOffIcon className="w-8 h-8 text-amber-600" />
+        </div>
+        <p className="text-stone-700 font-medium">Device Access Required</p>
+        <p className="text-sm text-stone-500 mt-1 max-w-[280px]">
+          Photon Tool needs permission to access your devices. Go to{" "}
+          <span className="font-medium text-stone-700">Settings → Apps</span>{" "}
+          and enable Device Access for this app.
+        </p>
       </div>
     );
   }

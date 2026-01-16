@@ -25,10 +25,18 @@ function AppIframe({
 }) {
   const refCallback = useCallback(
     (e: HTMLIFrameElement | null) => {
+      console.log(`[AppIframe] refCallback for ${app.definition.bundleId}:`, e ? 'element' : 'null');
       setAppIframeRef(app.definition.bundleId, e);
     },
     [app.definition.bundleId, setAppIframeRef]
   );
+
+  useEffect(() => {
+    console.log(`[AppIframe] MOUNTED: ${app.definition.bundleId}`);
+    return () => {
+      console.log(`[AppIframe] UNMOUNTED: ${app.definition.bundleId}`);
+    };
+  }, [app.definition.bundleId]);
 
   return (
     <iframe

@@ -1,14 +1,12 @@
-import { Circle, Square, Triangle } from "lucide-react";
+import { Circle } from "lucide-react";
 import { NavigationBarButton } from "./navigation-bar-button";
 import { cn } from "@/lib/utils";
 
 export function NavigationBar({
-  onBack,
   onHome,
   onMultitasking,
   side,
 }: {
-  onBack: () => void;
   onHome: () => void;
   onMultitasking: () => void;
   side: "left" | "center" | "right";
@@ -21,17 +19,9 @@ export function NavigationBar({
         side === "left" && "md:justify-start"
       )}
     >
-      <NavigationBarButton onClick={onBack}>
-        <Triangle className="-rotate-90 -ml-0.5 mr-0.5 size-5" />
-        <span className="sr-only">Global Back</span>
-      </NavigationBarButton>
-      <NavigationBarButton onClick={onHome}>
+      <NavigationBarButton onClick={onHome} onLongPress={onMultitasking}>
         <Circle className="size-5" />
-        <span className="sr-only">Home</span>
-      </NavigationBarButton>
-      <NavigationBarButton onClick={onMultitasking}>
-        <Square className="size-5" />
-        <span className="sr-only">Multitasking</span>
+        <span className="sr-only">Home (long press for multitasking)</span>
       </NavigationBarButton>
     </div>
   );

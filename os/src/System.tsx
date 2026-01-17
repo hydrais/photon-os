@@ -16,8 +16,10 @@ export function System() {
         <AppView showMultitasking={multitasking} />
       </div>
       <NavigationBar
-        onBack={() => {}}
-        onHome={api.system_homeButton}
+        onHome={() => {
+          setMultitasking(false);
+          api.system_homeButton();
+        }}
         onMultitasking={() => setMultitasking(!multitasking)}
         side="right"
       />

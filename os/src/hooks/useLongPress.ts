@@ -13,15 +13,20 @@ interface LongPressHandlers {
   onPointerLeave: (event: React.PointerEvent) => void;
 }
 
+interface LongPressResult extends LongPressHandlers {
+  wasLongPressRef: React.RefObject<boolean>;
+}
+
 export function useLongPress(
   onLongPress: (event: React.PointerEvent) => void,
   options: LongPressOptions = {}
-): LongPressHandlers {
+): LongPressResult {
   const { delay = 500, moveThreshold = 10 } = options;
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startPosRef = useRef<{ x: number; y: number } | null>(null);
   const eventRef = useRef<React.PointerEvent | null>(null);
+  const wasLongPressRef = useRef<boolean>(false);
 
   const clearTimer = useCallback(() => {
     if (timerRef.current) {
@@ -44,11 +49,15 @@ export function useLongPress(
         return;
       }
 
+      // Reset the long press flag
+      wasLongPressRef.current = false;
+
       startPosRef.current = { x: event.clientX, y: event.clientY };
       eventRef.current = event;
 
       timerRef.current = setTimeout(() => {
         if (eventRef.current) {
+          wasLongPressRef.current = true;
           onLongPress(eventRef.current);
         }
         clearTimer();
@@ -94,5 +103,6 @@ export function useLongPress(
     onPointerUp,
     onPointerCancel,
     onPointerLeave,
+    wasLongPressRef,
   };
 }

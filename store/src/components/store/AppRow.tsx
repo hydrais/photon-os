@@ -70,7 +70,7 @@ export function AppRow({
       case "updatedDate":
         return `Updated ${formatDate(app.updated_at)}`;
       default:
-        return app.author;
+        return app.tagline || app.author;
     }
   };
 

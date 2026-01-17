@@ -123,6 +123,9 @@ export function AppDetailScreen() {
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold truncate">{app.name}</h1>
+            {app.tagline && (
+              <p className="text-muted-foreground">{app.tagline}</p>
+            )}
             {app.developer_id ? (
               <Link
                 to={`/developer/${app.developer_id}`}

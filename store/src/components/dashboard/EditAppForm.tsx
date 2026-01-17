@@ -14,6 +14,7 @@ import type { StoreApp } from "@/lib/supabase/client";
 
 type FormData = {
   name: string;
+  tagline: string;
   url: string;
   description: string;
 };
@@ -28,6 +29,7 @@ export function EditAppForm({ app, onSuccess, onCancel }: EditAppFormProps) {
   const { update, loading, error } = useUpdateApp();
   const [formData, setFormData] = useState<FormData>({
     name: app.name,
+    tagline: app.tagline || "",
     url: app.url,
     description: app.description || "",
   });
@@ -65,6 +67,7 @@ export function EditAppForm({ app, onSuccess, onCancel }: EditAppFormProps) {
 
     const updateData: UpdateAppData = {
       name: formData.name.trim(),
+      tagline: formData.tagline?.trim() || null,
       url: formData.url.trim(),
       description: formData.description?.trim() || null,
     };
@@ -106,6 +109,16 @@ export function EditAppForm({ app, onSuccess, onCancel }: EditAppFormProps) {
             aria-invalid={!!fieldErrors.name}
           />
           <FieldError>{fieldErrors.name}</FieldError>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="tagline">Tagline (optional)</FieldLabel>
+          <Input
+            id="tagline"
+            placeholder="A short phrase describing your app"
+            value={formData.tagline}
+            onChange={handleChange("tagline")}
+          />
         </Field>
 
         <Field data-invalid={!!fieldErrors.url}>

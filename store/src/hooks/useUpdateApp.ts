@@ -5,6 +5,7 @@ export type UpdateAppData = {
   name: string;
   url: string;
   description?: string | null;
+  tagline?: string | null;
 };
 
 export function useUpdateApp() {
@@ -22,6 +23,7 @@ export function useUpdateApp() {
           name: data.name,
           url: data.url,
           description: data.description || null,
+          tagline: data.tagline || null,
         })
         .eq("id", appId);
 

@@ -292,6 +292,15 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
       async system_homeButton() {
         foregroundApp(LAUNCHER_APP);
       },
+      async system_getScale() {
+        const params = new URLSearchParams(window.location.search);
+        const scaleParam = params.get("scale");
+        if (scaleParam) {
+          const parsed = parseFloat(scaleParam);
+          if (!isNaN(parsed) && parsed > 0) return parsed;
+        }
+        return 1;
+      },
       async apps_getInstalledApps() {
         await waitForAppsLoaded();
         return installedAppsRef.current;

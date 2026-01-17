@@ -13,6 +13,32 @@ import type { RunningAppInstance } from "@photon-os/sdk";
 import { LAUNCHER_APP } from "@/lib/os/OperatingSystemContext";
 import { X } from "lucide-react";
 
+// Get scale from URL query parameter
+function getScale(): number | null {
+  const params = new URLSearchParams(window.location.search);
+  const scaleParam = params.get("scale");
+  if (scaleParam) {
+    const parsed = parseFloat(scaleParam);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  return null;
+}
+
+// Build app URL with scale parameter if applicable
+function getAppUrl(baseUrl: string): string {
+  const scale = getScale();
+  if (scale === null) return baseUrl;
+
+  try {
+    const url = new URL(baseUrl, window.location.origin);
+    url.searchParams.set("scale", String(scale));
+    return url.toString();
+  } catch {
+    // If URL parsing fails, return the original
+    return baseUrl;
+  }
+}
+
 function AppIframe({
   app,
   setAppIframeRef,
@@ -30,10 +56,12 @@ function AppIframe({
     [app.definition.bundleId, setAppIframeRef]
   );
 
+  const appUrl = useMemo(() => getAppUrl(app.definition.url), [app.definition.url]);
+
   return (
     <iframe
       className="h-full w-full border-0"
-      src={app.definition.url}
+      src={appUrl}
       ref={refCallback}
     />
   );

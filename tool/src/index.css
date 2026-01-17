@@ -126,4 +126,12 @@
   html {
     @apply font-sans;
     }
+
+  html,
+  body,
+  #root {
+    width: calc(100dvw / var(--os-scale, 1));
+    height: calc(100dvh / var(--os-scale, 1));
+    overflow: hidden;
+  }
 }

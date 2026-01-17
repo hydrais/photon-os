@@ -6,11 +6,11 @@ import { OperatingSystemContext } from "./lib/os/OperatingSystemContext";
 
 export function System() {
   const { api, multitasking, setMultitasking } = useContext(
-    OperatingSystemContext
+    OperatingSystemContext,
   );
 
   return (
-    <div className="h-screen flex flex-col">
+    <div id="frame" className="flex flex-col">
       <StatusBar />
       <div className="flex-1 bg-background flex flex-col">
         <AppView showMultitasking={multitasking} />

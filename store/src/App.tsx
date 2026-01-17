@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router";
+import { useApplyScale } from "@photon-os/react";
 import { TabLayout } from "./components/navigation/TabLayout";
 import { DiscoverScreen } from "./screens/DiscoverScreen";
 import { SearchScreen } from "./screens/SearchScreen";
@@ -14,6 +15,8 @@ import { EditAppScreen } from "./screens/EditApp";
 import { AppDetailScreen } from "./screens/AppDetailScreen";
 
 export default function App() {
+  useApplyScale();
+
   return (
     <BrowserRouter>
       <Routes>

@@ -17,6 +17,7 @@ export type LinkingCode = {
 
 export type OperatingSystemAPI = {
   system_homeButton: () => Promise<void>;
+  system_getScale: () => Promise<number>;
   apps_getInstalledApps: () => Promise<AppDefinition[]>;
   apps_launchApp: (app: AppDefinition) => Promise<AppLaunchResult>;
   apps_foregroundApp: (app: AppDefinition) => Promise<void>;

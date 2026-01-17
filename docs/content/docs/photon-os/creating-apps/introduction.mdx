@@ -47,6 +47,7 @@ The `OS` instance provides access to several managers:
 | `os.prefs`    | Store preferences (sandboxed per-app or shared)           |
 | `os.accounts` | Second Life account linking                               |
 | `os.devices`  | Communicate with Second Life devices                      |
+| `os.system`   | System info (get/apply scale factor)                      |
 
 ### Getting the Current User
 
@@ -112,6 +113,101 @@ function MyComponent() {
   );
 }
 ```
+
+### useApplyScale
+
+Photon OS can run at different scale factors (e.g., 2x for high-DPI displays in Second Life). When scaling is enabled, the OS automatically passes the `?scale=X` query parameter to your app's iframe URL.
+
+Use `useApplyScale` to automatically match the OS scale in your app:
+
+```tsx
+import { useApplyScale } from "@photon-os/react";
+
+function App() {
+  useApplyScale();
+
+  return <div>My app content</div>;
+}
+```
+
+The hook applies the scale factor to your document by:
+- Setting the `--os-scale` CSS variable
+- Setting `zoom` on the document element
+
+You also need CSS to properly size your app viewport:
+
+```css
+html,
+body,
+#root {
+  width: calc(100dvw / var(--os-scale, 1));
+  height: calc(100dvh / var(--os-scale, 1));
+  overflow: hidden;
+}
+```
+
+The `var(--os-scale, 1)` provides a fallback of `1` when running outside of Photon OS.
+
+### useScale
+
+If you need to read the scale value without automatically applying it:
+
+```tsx
+import { useScale } from "@photon-os/react";
+
+function MyComponent() {
+  const { scale, loading, error } = useScale();
+
+  if (loading) return <div>Loading...</div>;
+
+  return <div>Current scale: {scale}x</div>;
+}
+```
+
+## Scaling Without React
+
+If you're not using React, you can use the SDK directly:
+
+```tsx
+const os = new OS();
+
+// Apply scale to document and get the value
+const scale = await os.system.applyScale();
+
+// Or just get the scale value without applying
+const scale = await os.system.getScale();
+```
+
+Then manually set the CSS if needed:
+
+```tsx
+document.documentElement.style.setProperty("--os-scale", String(scale));
+document.documentElement.style.zoom = String(scale);
+```
+
+### Reading Scale from URL
+
+Since the OS passes the scale as a URL query parameter, you can also read it directly without the SDK:
+
+```tsx
+function getScale(): number | null {
+  const params = new URLSearchParams(window.location.search);
+  const scaleParam = params.get("scale");
+  if (scaleParam) {
+    const parsed = parseFloat(scaleParam);
+    if (!isNaN(parsed) && parsed > 0) return parsed;
+  }
+  return null;
+}
+
+const scale = getScale();
+if (scale !== null) {
+  document.documentElement.style.setProperty("--os-scale", String(scale));
+  document.documentElement.style.zoom = String(scale);
+}
+```
+
+This approach works immediately without waiting for the SDK RPC connection.
 
 ## App Definition
 

@@ -19,9 +19,9 @@ function DeveloperDashboardContent() {
       <div className="container max-w-4xl mx-auto px-4 py-6">
         <header className="mb-6">
           <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4">
-            <Link to="/">
+            <Link to="/more">
               <ArrowLeft className="size-4" data-icon="inline-start" />
-              Back to Store
+              Back
             </Link>
           </Button>
           <div className="flex items-center justify-between gap-4">

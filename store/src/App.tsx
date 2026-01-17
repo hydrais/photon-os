@@ -1,5 +1,10 @@
-import { BrowserRouter, Routes, Route } from "react-router";
-import { MainScreen } from "./screens/Main";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router";
+import { TabLayout } from "./components/navigation/TabLayout";
+import { DiscoverScreen } from "./screens/DiscoverScreen";
+import { SearchScreen } from "./screens/SearchScreen";
+import { MoreScreen } from "./screens/MoreScreen";
+import { InstallHistoryScreen } from "./screens/InstallHistoryScreen";
+import { RecentUpdatesScreen } from "./screens/RecentUpdatesScreen";
 import { SubmitAppScreen } from "./screens/SubmitApp";
 import { ProfileSetupScreen } from "./screens/ProfileSetup";
 import { ProfileEditScreen } from "./screens/ProfileEdit";
@@ -11,7 +16,17 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<MainScreen />} />
+        {/* Tab routes with bottom navigation */}
+        <Route element={<TabLayout />}>
+          <Route path="/" element={<Navigate to="/discover" replace />} />
+          <Route path="/discover" element={<DiscoverScreen />} />
+          <Route path="/search" element={<SearchScreen />} />
+          <Route path="/more" element={<MoreScreen />} />
+          <Route path="/more/history" element={<InstallHistoryScreen />} />
+          <Route path="/more/updates" element={<RecentUpdatesScreen />} />
+        </Route>
+
+        {/* Full-screen routes (no tab bar) */}
         <Route path="/submit" element={<SubmitAppScreen />} />
         <Route path="/profile/setup" element={<ProfileSetupScreen />} />
         <Route path="/profile/edit" element={<ProfileEditScreen />} />

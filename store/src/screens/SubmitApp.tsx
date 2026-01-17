@@ -17,7 +17,7 @@ function SubmitAppContent() {
   const { profile } = useDeveloperProfile();
 
   const handleSuccess = () => {
-    navigate("/");
+    navigate("/dashboard");
   };
 
   if (!profile) {
@@ -29,7 +29,7 @@ function SubmitAppContent() {
       <div className="container max-w-lg mx-auto px-4 py-6">
         <header className="mb-6">
           <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4">
-            <Link to="/">
+            <Link to="/more">
               <ArrowLeft className="size-4" data-icon="inline-start" />
               Back
             </Link>

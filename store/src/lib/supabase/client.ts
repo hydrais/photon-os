@@ -26,9 +26,18 @@ export type StoreApp = {
   url: string;
   description: string | null;
   submitted_at: string;
+  updated_at: string;
   developer_id: string | null;
   developer_display_name: string | null;
   developer_description: string | null;
   status: "listed" | "unlisted";
   unlisted_at: string | null;
+};
+
+export type StoreInstallEvent = {
+  id: string;
+  user_id: string;
+  app_id: string | null;
+  bundle_id: string;
+  installed_at: string;
 };

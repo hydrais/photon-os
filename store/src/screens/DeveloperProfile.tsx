@@ -10,7 +10,8 @@ import {
   CardContent,
 } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
-import { AppCard } from "@/components/store/AppCard";
+import { AppRow } from "@/components/store/AppRow";
+import { useInstalledApps } from "@/hooks/useInstalledApps";
 import { supabase, type DeveloperProfile, type StoreApp } from "@/lib/supabase/client";
 
 export function DeveloperProfileScreen() {
@@ -19,6 +20,7 @@ export function DeveloperProfileScreen() {
   const [apps, setApps] = useState<StoreApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { isInstalled, refresh: refreshInstalled } = useInstalledApps();
 
   useEffect(() => {
     async function fetchData() {
@@ -83,7 +85,7 @@ export function DeveloperProfileScreen() {
       <div className="min-h-screen bg-background">
         <div className="container max-w-4xl mx-auto px-4 py-6">
           <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4">
-            <Link to="/">
+            <Link to="/search">
               <ArrowLeft className="size-4" data-icon="inline-start" />
               Back
             </Link>
@@ -104,7 +106,7 @@ export function DeveloperProfileScreen() {
       <div className="container max-w-4xl mx-auto px-4 py-6">
         <header className="mb-6">
           <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4">
-            <Link to="/">
+            <Link to="/search">
               <ArrowLeft className="size-4" data-icon="inline-start" />
               Back
             </Link>
@@ -128,9 +130,14 @@ export function DeveloperProfileScreen() {
         </Card>
 
         {apps.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="divide-y divide-border">
             {apps.map((app) => (
-              <AppCard key={app.id} app={app} />
+              <AppRow
+                key={app.id}
+                app={app}
+                isInstalled={isInstalled(app.bundle_id)}
+                onInstalled={refreshInstalled}
+              />
             ))}
           </div>
         ) : (

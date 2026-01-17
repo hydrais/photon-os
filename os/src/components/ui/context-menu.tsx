@@ -1,8 +1,11 @@
 import * as React from "react"
+import { useRef } from "react"
 import { ContextMenu as ContextMenuPrimitive } from "radix-ui"
+import { Slot } from "@radix-ui/react-slot"
 
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, CheckIcon } from "lucide-react"
+import { useLongPress } from "@/hooks/useLongPress"
 
 function ContextMenu({
   ...props
@@ -20,6 +23,95 @@ function ContextMenuTrigger({
       className={cn("select-none", className)}
       {...props}
     />
+  )
+}
+
+function ContextMenuTriggerWithLongPress({
+  className,
+  children,
+  asChild,
+  delay = 500,
+  ...props
+}: React.ComponentProps<typeof ContextMenuPrimitive.Trigger> & {
+  delay?: number
+}) {
+  const triggerRef = useRef<HTMLSpanElement>(null)
+
+  const longPressHandlers = useLongPress(
+    (event) => {
+      // Dispatch synthetic contextmenu event at the pointer coordinates
+      const contextMenuEvent = new MouseEvent("contextmenu", {
+        bubbles: true,
+        cancelable: true,
+        clientX: event.clientX,
+        clientY: event.clientY,
+      })
+      triggerRef.current?.dispatchEvent(contextMenuEvent)
+    },
+    { delay }
+  )
+
+  const Comp = asChild ? Slot : "span"
+
+  return (
+    <ContextMenuPrimitive.Trigger
+      ref={triggerRef}
+      data-slot="context-menu-trigger"
+      className={cn("select-none", className)}
+      asChild
+      {...props}
+    >
+      <Comp
+        onPointerDown={(e: React.PointerEvent) => {
+          longPressHandlers.onPointerDown(e)
+          // Call original handler if present
+          if (asChild && React.isValidElement(children)) {
+            const childProps = children.props as Record<string, unknown>
+            if (typeof childProps.onPointerDown === "function") {
+              childProps.onPointerDown(e)
+            }
+          }
+        }}
+        onPointerMove={(e: React.PointerEvent) => {
+          longPressHandlers.onPointerMove(e)
+          if (asChild && React.isValidElement(children)) {
+            const childProps = children.props as Record<string, unknown>
+            if (typeof childProps.onPointerMove === "function") {
+              childProps.onPointerMove(e)
+            }
+          }
+        }}
+        onPointerUp={(e: React.PointerEvent) => {
+          longPressHandlers.onPointerUp(e)
+          if (asChild && React.isValidElement(children)) {
+            const childProps = children.props as Record<string, unknown>
+            if (typeof childProps.onPointerUp === "function") {
+              childProps.onPointerUp(e)
+            }
+          }
+        }}
+        onPointerCancel={(e: React.PointerEvent) => {
+          longPressHandlers.onPointerCancel(e)
+          if (asChild && React.isValidElement(children)) {
+            const childProps = children.props as Record<string, unknown>
+            if (typeof childProps.onPointerCancel === "function") {
+              childProps.onPointerCancel(e)
+            }
+          }
+        }}
+        onPointerLeave={(e: React.PointerEvent) => {
+          longPressHandlers.onPointerLeave(e)
+          if (asChild && React.isValidElement(children)) {
+            const childProps = children.props as Record<string, unknown>
+            if (typeof childProps.onPointerLeave === "function") {
+              childProps.onPointerLeave(e)
+            }
+          }
+        }}
+      >
+        {children}
+      </Comp>
+    </ContextMenuPrimitive.Trigger>
   )
 }
 
@@ -231,6 +323,7 @@ function ContextMenuShortcut({
 export {
   ContextMenu,
   ContextMenuTrigger,
+  ContextMenuTriggerWithLongPress,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuCheckboxItem,

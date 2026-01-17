@@ -4,7 +4,7 @@ import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
-  ContextMenuTrigger,
+  ContextMenuTriggerWithLongPress,
 } from "@/components/ui/context-menu";
 import { Info, Trash2 } from "lucide-react";
 
@@ -26,7 +26,7 @@ export function AppIcon({
 
   return (
     <ContextMenu>
-      <ContextMenuTrigger asChild>
+      <ContextMenuTriggerWithLongPress asChild>
         <button
           className="flex flex-col items-center gap-1.5 group"
           onClick={onClick}
@@ -52,7 +52,7 @@ export function AppIcon({
             {app.name}
           </span>
         </button>
-      </ContextMenuTrigger>
+      </ContextMenuTriggerWithLongPress>
       <ContextMenuContent>
         <ContextMenuItem onSelect={onAppInfo}>
           <Info />

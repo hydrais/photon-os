@@ -32,10 +32,7 @@ import {
   PermissionDrawer,
   type PermissionRequest,
 } from "@/components/system/permission-drawer";
-import {
-  fetchPermission,
-  setPermission,
-} from "../supabase/permissions";
+import { fetchPermission, setPermission } from "../supabase/permissions";
 import {
   fetchSandboxedPreference,
   setSandboxedPreference,
@@ -81,6 +78,12 @@ export const SYSTEM_APPS: AppDefinition[] = [
     name: "Settings",
     url: "/__settings",
   },
+  {
+    bundleId: "com.hydrais.photon.store",
+    author: "Photon OS",
+    name: "Store",
+    url: "https://store.photon.hydrais.com",
+  },
 ];
 
 type OperatingSystemContextType = {
@@ -90,7 +93,7 @@ type OperatingSystemContextType = {
   appIframeRefs: Record<AppBundleId, HTMLIFrameElement>;
   setAppIframeRef: (
     bundleId: string,
-    element: HTMLIFrameElement | null
+    element: HTMLIFrameElement | null,
   ) => void;
   foregroundApp: (app: AppDefinition) => void;
   closeApp: (app: AppDefinition) => void;
@@ -100,7 +103,7 @@ type OperatingSystemContextType = {
 };
 
 export const OperatingSystemContext = createContext<OperatingSystemContextType>(
-  {} as OperatingSystemContextType
+  {} as OperatingSystemContextType,
 );
 
 export function OperatingSystemProvider({ children }: PropsWithChildren) {
@@ -232,7 +235,7 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
         if (cached === true) return;
         if (cached === false) {
           throw new Error(
-            `Permission "${permissionType}" denied for app "${bundleId}"`
+            `Permission "${permissionType}" denied for app "${bundleId}"`,
           );
         }
         // cached === null means not yet requested, fall through to prompt
@@ -249,13 +252,15 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
       if (permission === true) return;
       if (permission === false) {
         throw new Error(
-          `Permission "${permissionType}" denied for app "${bundleId}"`
+          `Permission "${permissionType}" denied for app "${bundleId}"`,
         );
       }
 
       // Permission not yet requested - show prompt and await user response
       // Use ref to avoid dependency on installedApps (only used for display name)
-      const appDef = installedAppsRef.current.find((app) => app.bundleId === bundleId);
+      const appDef = installedAppsRef.current.find(
+        (app) => app.bundleId === bundleId,
+      );
       const appName = appDef?.name || bundleId;
 
       const granted = await new Promise<boolean>((resolve) => {
@@ -273,11 +278,11 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
 
       if (!granted) {
         throw new Error(
-          `Permission "${permissionType}" denied for app "${bundleId}"`
+          `Permission "${permissionType}" denied for app "${bundleId}"`,
         );
       }
     },
-    [user]
+    [user],
   );
 
   const api: OperatingSystemAPI = useMemo(
@@ -322,7 +327,7 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
       },
       async prefs_setSandboxed(
         key: string,
-        value: PreferenceValue
+        value: PreferenceValue,
       ): Promise<void> {
         if (!user) throw new Error("Not authenticated");
         const bundleId = identifyCallingApp();
@@ -343,7 +348,7 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
       },
       async prefs_setShared(
         key: string,
-        value: PreferenceValue
+        value: PreferenceValue,
       ): Promise<void> {
         if (!user) throw new Error("Not authenticated");
         await setSharedPreference(user.id, key, value);
@@ -361,7 +366,7 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
         return await fetchLinkedSecondLifeAccounts(user.id);
       },
       async accounts_unlinkSecondLifeAccount(
-        avatarUuid: string
+        avatarUuid: string,
       ): Promise<void> {
         if (!user) throw new Error("Not authenticated");
         await deleteLinkedSecondLifeAccount(user.id, avatarUuid);
@@ -380,7 +385,7 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
       async devices_sendMessage(
         deviceId: string,
         type: string,
-        payload: Record<string, unknown>
+        payload: Record<string, unknown>,
       ): Promise<SendMessageResult> {
         if (!user) throw new Error("Not authenticated");
         await checkPermission("devices");
@@ -392,7 +397,7 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
         await deleteRegisteredDevice(user.id, deviceId);
       },
       async devices_subscribe(
-        callback: (message: DeviceMessage) => void
+        callback: (message: DeviceMessage) => void,
       ): Promise<void> {
         if (!user) throw new Error("Not authenticated");
         await checkPermission("devices");
@@ -407,7 +412,15 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
         invalidatePermissionCache(bundleId);
       },
     }),
-    [installedApps, runningApps, user, identifyCallingApp, checkPermission, invalidatePermissionCache, waitForAppsLoaded]
+    [
+      installedApps,
+      runningApps,
+      user,
+      identifyCallingApp,
+      checkPermission,
+      invalidatePermissionCache,
+      waitForAppsLoaded,
+    ],
   );
 
   useEffect(() => {
@@ -434,14 +447,22 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
         };
 
         // Validate required fields
-        if (!payload.bundleId || !payload.name || !payload.author || !payload.url) {
-          console.warn("Invalid suggest_app_install payload from device:", message.deviceId);
+        if (
+          !payload.bundleId ||
+          !payload.name ||
+          !payload.author ||
+          !payload.url
+        ) {
+          console.warn(
+            "Invalid suggest_app_install payload from device:",
+            message.deviceId,
+          );
           return;
         }
 
         // Check if already installed
         const alreadyInstalled = installedApps.some(
-          (app) => app.bundleId === payload.bundleId
+          (app) => app.bundleId === payload.bundleId,
         );
         if (alreadyInstalled) {
           return;
@@ -493,15 +514,13 @@ export function OperatingSystemProvider({ children }: PropsWithChildren) {
       multitasking,
       setMultitasking,
       invalidatePermissionCache,
-    ]
+    ],
   );
 
   return (
     <OperatingSystemContext.Provider value={contextValue}>
       {/* Always render children to preserve iframe state */}
-      <div className={loading ? "hidden" : undefined}>
-        {children}
-      </div>
+      <div className={loading ? "hidden" : undefined}>{children}</div>
       {isRootShell && (
         <>
           {loading && (

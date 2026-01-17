@@ -47,25 +47,27 @@ export function MoreScreen() {
 
         {/* Developer Section */}
         <section>
-          <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">
-            Developer
-          </h2>
           {loading ? (
             <div className="py-4 text-muted-foreground">Loading...</div>
           ) : hasProfile ? (
-            <div className="divide-y divide-border">
-              <MenuItem to="/dashboard" icon={LayoutDashboard} label="My Apps" />
-              <MenuItem to="/submit" icon={Plus} label="Submit New App" />
-              <MenuItem to="/profile/edit" icon={User} label="Edit Profile" />
-            </div>
+            <>
+              <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-2">
+                Developer
+              </h2>
+              <div className="divide-y divide-border">
+                <MenuItem to="/dashboard" icon={LayoutDashboard} label="My Apps" />
+                <MenuItem to="/submit" icon={Plus} label="Submit New App" />
+                <MenuItem to="/profile/edit" icon={User} label="Edit Profile" />
+              </div>
+            </>
           ) : (
-            <div className="py-4">
-              <p className="text-muted-foreground mb-4">
-                Create a developer profile to publish apps to the store.
-              </p>
-              <Button asChild>
-                <Link to="/profile/setup">Start Publishing</Link>
-              </Button>
+            <div className="py-3">
+              <Link
+                to="/profile/setup"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Publish your own app →
+              </Link>
             </div>
           )}
         </section>

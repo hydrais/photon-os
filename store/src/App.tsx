@@ -11,6 +11,7 @@ import { ProfileEditScreen } from "./screens/ProfileEdit";
 import { DeveloperProfileScreen } from "./screens/DeveloperProfile";
 import { DeveloperDashboardScreen } from "./screens/DeveloperDashboard";
 import { EditAppScreen } from "./screens/EditApp";
+import { AppDetailScreen } from "./screens/AppDetailScreen";
 
 export default function App() {
   return (
@@ -27,6 +28,7 @@ export default function App() {
         </Route>
 
         {/* Full-screen routes (no tab bar) */}
+        <Route path="/app/:appId" element={<AppDetailScreen />} />
         <Route path="/submit" element={<SubmitAppScreen />} />
         <Route path="/profile/setup" element={<ProfileSetupScreen />} />
         <Route path="/profile/edit" element={<ProfileEditScreen />} />

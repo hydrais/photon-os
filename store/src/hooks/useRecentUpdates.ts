@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase/client";
-import type { StoreApp } from "../lib/supabase/client";
+import type { StoreApp, AppRelease } from "../lib/supabase/client";
+
+export type AppWithLatestRelease = StoreApp & {
+  latestRelease: AppRelease | null;
+};
 
 export function useRecentUpdates(userId: string | undefined) {
-  const [updates, setUpdates] = useState<StoreApp[]>([]);
+  const [updates, setUpdates] = useState<AppWithLatestRelease[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -51,7 +55,35 @@ export function useRecentUpdates(userId: string | undefined) {
         throw new Error(appsError.message);
       }
 
-      setUpdates(appsData as StoreApp[]);
+      const apps = appsData as StoreApp[];
+
+      // Get the latest release for each app
+      const appIds = apps.map((a) => a.id);
+      const { data: releasesData, error: releasesError } = await supabase
+        .from("app_releases")
+        .select("*")
+        .in("app_id", appIds)
+        .order("published_at", { ascending: false });
+
+      if (releasesError) {
+        throw new Error(releasesError.message);
+      }
+
+      // Create a map of app_id -> latest release
+      const latestReleaseByAppId = new Map<string, AppRelease>();
+      for (const release of releasesData as AppRelease[]) {
+        if (!latestReleaseByAppId.has(release.app_id)) {
+          latestReleaseByAppId.set(release.app_id, release);
+        }
+      }
+
+      // Combine apps with their latest releases
+      const appsWithReleases: AppWithLatestRelease[] = apps.map((app) => ({
+        ...app,
+        latestRelease: latestReleaseByAppId.get(app.id) || null,
+      }));
+
+      setUpdates(appsWithReleases);
     } catch (err) {
       setError(err as Error);
     } finally {

@@ -53,6 +53,7 @@ export function RecentUpdatesScreen() {
                 subtitle="updatedDate"
                 isInstalled={isInstalled(app.bundle_id)}
                 onInstalled={refreshInstalled}
+                latestRelease={app.latestRelease ?? undefined}
               />
             ))}
           </div>

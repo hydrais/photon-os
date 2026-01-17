@@ -12,6 +12,8 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { EditAppForm } from "@/components/dashboard/EditAppForm";
+import { ReleaseManagement } from "@/components/dashboard/ReleaseManagement";
+import { ReviewManagement } from "@/components/dashboard/ReviewManagement";
 import { useDeveloperProfile } from "@/hooks/useDeveloperProfile";
 import { supabase, type StoreApp } from "@/lib/supabase/client";
 
@@ -91,6 +93,30 @@ function EditAppContent() {
     );
   }
 
+  const handleVersionChange = (newVersion: string) => {
+    setApp((prev) => (prev ? { ...prev, current_version: newVersion } : null));
+  };
+
+  const handleStatsChange = async () => {
+    if (!appId) return;
+    const { data } = await supabase
+      .from("store_apps")
+      .select("average_rating, review_count")
+      .eq("id", appId)
+      .single();
+    if (data) {
+      setApp((prev) =>
+        prev
+          ? {
+              ...prev,
+              average_rating: data.average_rating,
+              review_count: data.review_count,
+            }
+          : null
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container max-w-lg mx-auto px-4 py-6">
@@ -104,21 +130,54 @@ function EditAppContent() {
           <h1 className="text-2xl font-semibold">Edit App</h1>
         </header>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>App Details</CardTitle>
-            <CardDescription>
-              Update your app's information below.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <EditAppForm
-              app={app}
-              onSuccess={handleSuccess}
-              onCancel={handleCancel}
-            />
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>App Details</CardTitle>
+              <CardDescription>
+                Update your app's information below.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EditAppForm
+                app={app}
+                onSuccess={handleSuccess}
+                onCancel={handleCancel}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Releases</CardTitle>
+              <CardDescription>
+                Manage your app's release history and publish new versions.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ReleaseManagement
+                appId={app.id}
+                currentVersion={app.current_version}
+                onVersionChange={handleVersionChange}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Reviews</CardTitle>
+              <CardDescription>
+                View and manage reviews from users.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ReviewManagement
+                app={app}
+                onStatsChange={handleStatsChange}
+              />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

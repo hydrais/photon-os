@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { Link } from "react-router";
+import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
+import { ReleaseNotePreview } from "@/components/store/ReleaseNotePreview";
 import { os } from "@/lib/os";
-import type { StoreApp } from "@/lib/supabase/client";
+import type { StoreApp, AppRelease } from "@/lib/supabase/client";
 
 type AppRowProps = {
   app: StoreApp;
   subtitle?: "author" | "date" | "updatedDate";
   isInstalled: boolean;
   onInstalled?: () => void;
+  latestRelease?: AppRelease;
 };
 
 export function AppRow({
@@ -17,6 +20,7 @@ export function AppRow({
   subtitle = "author",
   isInstalled,
   onInstalled,
+  latestRelease,
 }: AppRowProps) {
   const [installing, setInstalling] = useState(false);
 
@@ -74,27 +78,29 @@ export function AppRow({
 
   return (
     <div className="flex items-center gap-3 py-2">
-      {/* App Icon Placeholder */}
-      <div className="size-14 shrink-0 rounded-xl bg-muted flex items-center justify-center text-muted-foreground text-xl font-semibold">
-        {app.name.charAt(0).toUpperCase()}
-      </div>
+      {/* Clickable area linking to app detail */}
+      <Link
+        to={`/app/${app.id}`}
+        className="flex items-center gap-3 flex-1 min-w-0"
+      >
+        {/* App Icon Placeholder */}
+        <div className="size-14 shrink-0 rounded-xl bg-muted flex items-center justify-center text-muted-foreground text-xl font-semibold">
+          {app.name.charAt(0).toUpperCase()}
+        </div>
 
-      {/* App Info */}
-      <div className="flex-1 min-w-0">
-        <div className="font-medium truncate">{app.name}</div>
-        <div className="text-sm text-muted-foreground truncate">
-          {subtitle === "author" && app.developer_id ? (
-            <Link
-              to={`/developer/${app.developer_id}`}
-              className="hover:underline"
-            >
-              {subtitleText}
-            </Link>
-          ) : (
-            subtitleText
+        {/* App Info */}
+        <div className="flex-1 min-w-0">
+          <div className="font-medium truncate">{app.name}</div>
+          <div className="text-sm text-muted-foreground truncate">
+            {subtitleText}
+          </div>
+          {latestRelease && (
+            <div className="mt-1">
+              <ReleaseNotePreview release={latestRelease} maxLength={50} />
+            </div>
           )}
         </div>
-      </div>
+      </Link>
 
       {/* Action Button */}
       <Button

@@ -32,6 +32,17 @@ export type StoreApp = {
   developer_description: string | null;
   status: "listed" | "unlisted";
   unlisted_at: string | null;
+  current_version: string | null;
+  average_rating: number | null;
+  review_count: number;
+};
+
+export type AppRelease = {
+  id: string;
+  app_id: string;
+  version: string;
+  release_notes: string | null;
+  published_at: string;
 };
 
 export type StoreInstallEvent = {
@@ -40,4 +51,14 @@ export type StoreInstallEvent = {
   app_id: string | null;
   bundle_id: string;
   installed_at: string;
+};
+
+export type AppReview = {
+  id: string;
+  app_id: string;
+  user_id: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+  updated_at: string;
 };

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "react-router";
-import { ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { ReleaseNotePreview } from "@/components/store/ReleaseNotePreview";

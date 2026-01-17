@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Spinner } from "@/components/ui/spinner";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -39,15 +38,25 @@ export function ReleaseManagement({
   onVersionChange,
 }: ReleaseManagementProps) {
   const { releases, loading, refetch } = useAppReleases(appId);
-  const { publish, loading: publishing, error: publishError } = usePublishRelease();
+  const {
+    publish,
+    loading: publishing,
+    error: publishError,
+  } = usePublishRelease();
   const { edit, loading: editing, error: editError } = useEditRelease();
-  const { deleteRelease, loading: deleting, error: deleteError } = useDeleteRelease();
+  const {
+    deleteRelease,
+    loading: deleting,
+    error: deleteError,
+  } = useDeleteRelease();
 
   const [showNewForm, setShowNewForm] = useState(false);
   const [newVersion, setNewVersion] = useState("");
   const [newReleaseNotes, setNewReleaseNotes] = useState("");
 
-  const [editingRelease, setEditingRelease] = useState<EditingRelease | null>(null);
+  const [editingRelease, setEditingRelease] = useState<EditingRelease | null>(
+    null,
+  );
   const [deleteTarget, setDeleteTarget] = useState<AppRelease | null>(null);
 
   const formatDate = (dateString: string) => {
@@ -152,7 +161,10 @@ export function ReleaseManagement({
         <div>
           {currentVersion ? (
             <p className="text-sm text-muted-foreground">
-              Current version: <span className="font-medium text-foreground">{currentVersion}</span>
+              Current version:{" "}
+              <span className="font-medium text-foreground">
+                {currentVersion}
+              </span>
             </p>
           ) : (
             <p className="text-sm text-muted-foreground">No releases yet</p>
@@ -192,7 +204,9 @@ export function ReleaseManagement({
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium">Release Notes (optional)</label>
+            <label className="text-sm font-medium">
+              Release Notes (optional)
+            </label>
             <Textarea
               placeholder="What's new in this version..."
               value={newReleaseNotes}
@@ -230,8 +244,14 @@ export function ReleaseManagement({
       {/* Release List */}
       {releases.length === 0 && !showNewForm ? (
         <div className="text-center py-8 border rounded-lg bg-muted/30">
-          <p className="text-muted-foreground mb-2">No releases published yet</p>
-          <Button size="sm" variant="outline" onClick={() => setShowNewForm(true)}>
+          <p className="text-muted-foreground mb-2">
+            No releases published yet
+          </p>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setShowNewForm(true)}
+          >
             <Plus className="size-4" data-icon="inline-start" />
             Publish your first release
           </Button>
@@ -239,10 +259,7 @@ export function ReleaseManagement({
       ) : (
         <div className="space-y-2">
           {releases.map((release, index) => (
-            <div
-              key={release.id}
-              className="border rounded-lg p-4 space-y-2"
-            >
+            <div key={release.id} className="border rounded-lg p-4 space-y-2">
               {editingRelease?.id === release.id ? (
                 // Edit mode
                 <div className="space-y-3">
@@ -349,12 +366,16 @@ export function ReleaseManagement({
       )}
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && !deleting && setDeleteTarget(null)}>
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && !deleting && setDeleteTarget(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Release</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete version {deleteTarget?.version}? This action cannot be undone.
+              Are you sure you want to delete version {deleteTarget?.version}?
+              This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           {deleteError && (

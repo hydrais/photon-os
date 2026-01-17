@@ -1,6 +1,12 @@
 import { Link } from "react-router";
-import { ChevronRight, History, RefreshCw, Plus, LayoutDashboard, User } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  ChevronRight,
+  History,
+  RefreshCw,
+  Plus,
+  LayoutDashboard,
+  User,
+} from "lucide-react";
 import { useDeveloperProfile } from "@/hooks/useDeveloperProfile";
 
 function MenuItem({
@@ -40,8 +46,16 @@ export function MoreScreen() {
             Your Apps
           </h2>
           <div className="divide-y divide-border">
-            <MenuItem to="/more/history" icon={History} label="Install History" />
-            <MenuItem to="/more/updates" icon={RefreshCw} label="Recent Updates" />
+            <MenuItem
+              to="/more/history"
+              icon={History}
+              label="Install History"
+            />
+            <MenuItem
+              to="/more/updates"
+              icon={RefreshCw}
+              label="Recent Updates"
+            />
           </div>
         </section>
 
@@ -55,7 +69,11 @@ export function MoreScreen() {
                 Developer
               </h2>
               <div className="divide-y divide-border">
-                <MenuItem to="/dashboard" icon={LayoutDashboard} label="My Apps" />
+                <MenuItem
+                  to="/dashboard"
+                  icon={LayoutDashboard}
+                  label="My Apps"
+                />
                 <MenuItem to="/submit" icon={Plus} label="Submit New App" />
                 <MenuItem to="/profile/edit" icon={User} label="Edit Profile" />
               </div>

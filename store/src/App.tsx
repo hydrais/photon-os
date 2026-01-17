@@ -13,6 +13,7 @@ import { DeveloperProfileScreen } from "./screens/DeveloperProfile";
 import { DeveloperDashboardScreen } from "./screens/DeveloperDashboard";
 import { EditAppScreen } from "./screens/EditApp";
 import { AppDetailScreen } from "./screens/AppDetailScreen";
+import { NewUI } from "./screens/NewUI";
 
 export default function App() {
   useApplyScale();
@@ -20,24 +21,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Tab routes with bottom navigation */}
-        <Route element={<TabLayout />}>
-          <Route path="/" element={<Navigate to="/discover" replace />} />
-          <Route path="/discover" element={<DiscoverScreen />} />
-          <Route path="/search" element={<SearchScreen />} />
-          <Route path="/more" element={<MoreScreen />} />
-          <Route path="/more/history" element={<InstallHistoryScreen />} />
-          <Route path="/more/updates" element={<RecentUpdatesScreen />} />
-        </Route>
-
-        {/* Full-screen routes (no tab bar) */}
-        <Route path="/app/:appId" element={<AppDetailScreen />} />
-        <Route path="/submit" element={<SubmitAppScreen />} />
-        <Route path="/profile/setup" element={<ProfileSetupScreen />} />
-        <Route path="/profile/edit" element={<ProfileEditScreen />} />
-        <Route path="/developer/:developerId" element={<DeveloperProfileScreen />} />
-        <Route path="/dashboard" element={<DeveloperDashboardScreen />} />
-        <Route path="/dashboard/app/:appId/edit" element={<EditAppScreen />} />
+        <Route path="/" element={<NewUI />} />
       </Routes>
     </BrowserRouter>
   );

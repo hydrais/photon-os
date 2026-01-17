@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { AppDefinition } from "@photon-os/sdk";
 import {
   ContextMenu,
@@ -6,47 +7,6 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Info, Trash2 } from "lucide-react";
-
-function getAppColor(bundleId: string): string {
-  const colors = [
-    "bg-red-500",
-    "bg-orange-500",
-    "bg-amber-500",
-    "bg-yellow-500",
-    "bg-lime-500",
-    "bg-green-500",
-    "bg-emerald-500",
-    "bg-teal-500",
-    "bg-cyan-500",
-    "bg-sky-500",
-    "bg-blue-500",
-    "bg-indigo-500",
-    "bg-violet-500",
-    "bg-purple-500",
-    "bg-fuchsia-500",
-    "bg-pink-500",
-    "bg-rose-500",
-  ];
-
-  let hash = 0;
-  for (let i = 0; i < bundleId.length; i++) {
-    hash = bundleId.charCodeAt(i) + ((hash << 5) - hash);
-  }
-
-  return colors[Math.abs(hash) % colors.length];
-}
-
-function getInitials(name: string): string {
-  const words = name.split(/\s+/);
-  if (words.length === 1) {
-    return name.substring(0, 2).toUpperCase();
-  }
-  return words
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase();
-}
 
 export function AppIcon({
   app,
@@ -61,8 +21,8 @@ export function AppIcon({
   onUninstall: () => void;
   canBeUninstalled?: boolean;
 }) {
-  const color = getAppColor(app.bundleId);
-  const initials = getInitials(app.name);
+  const [iconError, setIconError] = useState(false);
+  const showIcon = app.icon && !iconError;
 
   return (
     <ContextMenu>
@@ -72,12 +32,21 @@ export function AppIcon({
           onClick={onClick}
         >
           <div
-            className={`w-12 h-12 ${color} rounded-full flex items-center justify-center shadow-lg
+            className={`w-12 h-12 rounded-lg bg-muted flex items-center justify-center shadow-lg overflow-hidden
               group-hover:scale-105 group-active:scale-95 transition-transform duration-150`}
           >
-            <span className="text-white text-xl font-semibold drop-shadow-sm">
-              {initials}
-            </span>
+            {showIcon ? (
+              <img
+                src={app.icon}
+                alt={app.name}
+                className="w-full h-full object-cover"
+                onError={() => setIconError(true)}
+              />
+            ) : (
+              <span className="text-muted-foreground text-xl font-semibold">
+                {app.name.charAt(0).toUpperCase()}
+              </span>
+            )}
           </div>
           <span className="text-xs text-white font-medium drop-shadow-md truncate max-w-[72px] text-center">
             {app.name}

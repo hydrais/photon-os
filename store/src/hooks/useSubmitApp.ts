@@ -5,6 +5,7 @@ export type SubmitAppData = {
   bundleId: string;
   name: string;
   url: string;
+  iconUrl?: string;
   description?: string;
   developerId: string;
   developerDisplayName: string;
@@ -23,6 +24,7 @@ export function useSubmitApp() {
       name: data.name,
       author: data.developerDisplayName,
       url: data.url,
+      icon_url: data.iconUrl || null,
       description: data.description || null,
       developer_id: data.developerId,
     });

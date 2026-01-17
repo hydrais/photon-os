@@ -8,6 +8,7 @@ import { ChangelogList } from "@/components/store/ChangelogList";
 import { StarRating } from "@/components/store/StarRating";
 import { ReviewForm } from "@/components/store/ReviewForm";
 import { ReviewList } from "@/components/store/ReviewList";
+import { AppIconImage } from "@/components/store/AppIconImage";
 import { useAppDetail } from "@/hooks/useAppDetail";
 import { useAppReleases } from "@/hooks/useAppReleases";
 import { useAppReviews } from "@/hooks/useAppReviews";
@@ -39,6 +40,7 @@ export function AppDetailScreen() {
         name: app.name,
         author: app.author,
         url: app.url,
+        icon: app.icon_url ?? undefined,
       });
       refreshInstalled();
     } catch (err) {
@@ -56,6 +58,7 @@ export function AppDetailScreen() {
         name: app.name,
         author: app.author,
         url: app.url,
+        icon: app.icon_url ?? undefined,
       });
     } catch (err) {
       console.error("Failed to launch app:", err);
@@ -118,9 +121,11 @@ export function AppDetailScreen() {
 
         {/* App Header */}
         <div className="flex items-start gap-4 mb-6">
-          <div className="size-20 shrink-0 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground text-3xl font-semibold">
-            {app.name.charAt(0).toUpperCase()}
-          </div>
+          <AppIconImage
+            iconUrl={app.icon_url}
+            appName={app.name}
+            size="lg"
+          />
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl font-bold truncate">{app.name}</h1>
             {app.tagline && (

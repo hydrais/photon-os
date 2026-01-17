@@ -8,6 +8,7 @@ type UserInstalledAppRow = {
   name: string;
   author: string;
   url: string;
+  icon: string | null;
   installed_at: string;
 };
 
@@ -17,6 +18,7 @@ function rowToAppDefinition(row: UserInstalledAppRow): AppDefinition {
     name: row.name,
     author: row.author,
     url: row.url,
+    icon: row.icon ?? undefined,
   };
 }
 
@@ -44,6 +46,7 @@ export async function insertInstalledApp(
     name: app.name,
     author: app.author,
     url: app.url,
+    icon: app.icon || null,
   });
 
   if (error) {

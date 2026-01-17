@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useInstalledApps } from "@photon-os/react";
 import { AppIcon } from "./components/launcher/app-icon";
+import { AppInfoIcon } from "./components/launcher/app-info-icon";
 import { Spinner } from "./components/ui/spinner";
 import {
   Drawer,
@@ -71,7 +72,7 @@ export function Launcher() {
     <div
       className={`fixed inset-0 flex flex-col bg-cover bg-center bg-no-repeat ${
         !backgroundUrl
-          ? "bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500"
+          ? "bg-gradient-to-br from-violet-600 via-purple-600 to-pink-500"
           : ""
       }`}
       style={
@@ -118,6 +119,7 @@ export function Launcher() {
       >
         <DrawerContent>
           <DrawerHeader>
+            {selectedApp && <AppInfoIcon app={selectedApp} />}
             <DrawerTitle>{selectedApp?.name}</DrawerTitle>
             <DrawerDescription>by {selectedApp?.author}</DrawerDescription>
           </DrawerHeader>

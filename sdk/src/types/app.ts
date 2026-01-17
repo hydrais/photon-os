@@ -5,6 +5,7 @@ export type AppDefinition = {
   name: string;
   author: string;
   url: string;
+  icon?: string;
 };
 
 export type RunningAppInstance = {

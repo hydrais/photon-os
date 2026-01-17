@@ -16,6 +16,7 @@ type FormData = {
   name: string;
   tagline: string;
   url: string;
+  iconUrl: string;
   description: string;
 };
 
@@ -31,6 +32,7 @@ export function EditAppForm({ app, onSuccess, onCancel }: EditAppFormProps) {
     name: app.name,
     tagline: app.tagline || "",
     url: app.url,
+    iconUrl: app.icon_url || "",
     description: app.description || "",
   });
   const [fieldErrors, setFieldErrors] = useState<
@@ -69,6 +71,7 @@ export function EditAppForm({ app, onSuccess, onCancel }: EditAppFormProps) {
       name: formData.name.trim(),
       tagline: formData.tagline?.trim() || null,
       url: formData.url.trim(),
+      iconUrl: formData.iconUrl?.trim() || null,
       description: formData.description?.trim() || null,
     };
 
@@ -132,6 +135,17 @@ export function EditAppForm({ app, onSuccess, onCancel }: EditAppFormProps) {
             aria-invalid={!!fieldErrors.url}
           />
           <FieldError>{fieldErrors.url}</FieldError>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="iconUrl">Icon URL (optional)</FieldLabel>
+          <Input
+            id="iconUrl"
+            type="url"
+            placeholder="https://example.com/icon.png"
+            value={formData.iconUrl}
+            onChange={handleChange("iconUrl")}
+          />
         </Field>
 
         <Field>

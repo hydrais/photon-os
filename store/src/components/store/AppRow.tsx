@@ -3,6 +3,7 @@ import { Link } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { ReleaseNotePreview } from "@/components/store/ReleaseNotePreview";
+import { AppIconImage } from "@/components/store/AppIconImage";
 import { os } from "@/lib/os";
 import type { StoreApp, AppRelease } from "@/lib/supabase/client";
 
@@ -31,6 +32,7 @@ export function AppRow({
         name: app.name,
         author: app.author,
         url: app.url,
+        icon: app.icon_url ?? undefined,
       });
       onInstalled?.();
     } catch (error) {
@@ -47,6 +49,7 @@ export function AppRow({
         name: app.name,
         author: app.author,
         url: app.url,
+        icon: app.icon_url ?? undefined,
       });
     } catch (error) {
       console.error("Failed to launch app:", error);
@@ -82,10 +85,12 @@ export function AppRow({
         to={`/app/${app.id}`}
         className="flex items-center gap-3 flex-1 min-w-0"
       >
-        {/* App Icon Placeholder */}
-        <div className="size-14 shrink-0 rounded-xl bg-muted flex items-center justify-center text-muted-foreground text-xl font-semibold">
-          {app.name.charAt(0).toUpperCase()}
-        </div>
+        {/* App Icon */}
+        <AppIconImage
+          iconUrl={app.icon_url}
+          appName={app.name}
+          size="md"
+        />
 
         {/* App Info */}
         <div className="flex-1 min-w-0">

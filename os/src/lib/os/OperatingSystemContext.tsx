@@ -77,12 +77,14 @@ export const SYSTEM_APPS: AppDefinition[] = [
     author: "Photon OS",
     name: "Settings",
     url: "/__settings",
+    icon: "/settings.svg",
   },
   {
     bundleId: "com.hydrais.photon.store",
     author: "Photon OS",
     name: "Store",
     url: "https://store.photon.hydrais.com",
+    icon: "/store.svg",
   },
 ];
 

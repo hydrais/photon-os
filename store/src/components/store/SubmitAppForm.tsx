@@ -15,6 +15,7 @@ type FormData = {
   bundleId: string;
   name: string;
   url: string;
+  iconUrl: string;
   description: string;
 };
 
@@ -34,6 +35,7 @@ export function SubmitAppForm({
     bundleId: "",
     name: "",
     url: "",
+    iconUrl: "",
     description: "",
   });
   const [fieldErrors, setFieldErrors] = useState<
@@ -78,6 +80,7 @@ export function SubmitAppForm({
       bundleId: formData.bundleId.trim(),
       name: formData.name.trim(),
       url: formData.url.trim(),
+      iconUrl: formData.iconUrl?.trim() || undefined,
       description: formData.description?.trim() || undefined,
       developerId,
       developerDisplayName,
@@ -143,6 +146,17 @@ export function SubmitAppForm({
             aria-invalid={!!fieldErrors.url}
           />
           <FieldError>{fieldErrors.url}</FieldError>
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="iconUrl">Icon URL (optional)</FieldLabel>
+          <Input
+            id="iconUrl"
+            type="url"
+            placeholder="https://example.com/icon.png"
+            value={formData.iconUrl}
+            onChange={handleChange("iconUrl")}
+          />
         </Field>
 
         <Field>

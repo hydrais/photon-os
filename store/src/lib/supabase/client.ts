@@ -24,6 +24,7 @@ export type StoreApp = {
   name: string;
   author: string;
   url: string;
+  icon_url: string | null;
   description: string | null;
   tagline: string | null;
   submitted_at: string;

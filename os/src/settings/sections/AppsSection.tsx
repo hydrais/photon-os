@@ -23,6 +23,26 @@ import {
   setPermission,
 } from "@/lib/supabase/permissions";
 
+function AppIconImage({ app }: { app: AppDefinition }) {
+  const [iconError, setIconError] = useState(false);
+  const showIcon = app.icon && !iconError;
+
+  return (
+    <div className="size-10 shrink-0 rounded-lg bg-muted flex items-center justify-center text-muted-foreground text-base font-semibold overflow-hidden">
+      {showIcon ? (
+        <img
+          src={app.icon}
+          alt={app.name}
+          className="w-full h-full object-cover"
+          onError={() => setIconError(true)}
+        />
+      ) : (
+        app.name.charAt(0).toUpperCase()
+      )}
+    </div>
+  );
+}
+
 const SYSTEM_BUNDLE_IDS = [
   "com.hydrais.photon.launcher",
   "com.hydrais.photon.settings",
@@ -191,6 +211,7 @@ export function AppsSection() {
                     setExpandedApp(isExpanded ? null : app.bundleId)
                   }
                 >
+                  <AppIconImage app={app} />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium">{app.name}</div>
                     <div className="text-sm text-muted-foreground">
@@ -268,6 +289,7 @@ export function AppsSection() {
               key={app.bundleId}
               className="flex items-center gap-4 p-4 rounded-2xl bg-muted/30"
             >
+              <AppIconImage app={app} />
               <div className="flex-1 min-w-0">
                 <div className="font-medium">{app.name}</div>
                 <div className="text-sm text-muted-foreground">

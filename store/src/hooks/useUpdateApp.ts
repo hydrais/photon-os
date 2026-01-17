@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase/client";
 export type UpdateAppData = {
   name: string;
   url: string;
+  iconUrl?: string | null;
   description?: string | null;
   tagline?: string | null;
 };
@@ -22,6 +23,7 @@ export function useUpdateApp() {
         .update({
           name: data.name,
           url: data.url,
+          icon_url: data.iconUrl || null,
           description: data.description || null,
           tagline: data.tagline || null,
         })

@@ -1,29 +1,28 @@
-import { Link } from "react-router";
-import { ChevronLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router";
 import { Spinner } from "@/components/ui/spinner";
 import { AppRow } from "@/components/store/AppRow";
 import { useInstallHistory } from "@/hooks/useInstallHistory";
 import { useInstalledApps } from "@/hooks/useInstalledApps";
 import { useDeveloperProfile } from "@/hooks/useDeveloperProfile";
+import { PhotonNavBar } from "@/components/ui/photon/nav-bar";
+import { PhotonNavBarBackButton } from "@/components/ui/photon/nav-bar-back-button";
+import { PhotonNavBarTitle } from "@/components/ui/photon/nav-bar-title";
+import { PhotonContentArea } from "@/components/ui/photon/content-area";
 
 export function InstallHistoryScreen() {
+  const navigate = useNavigate();
   const { user } = useDeveloperProfile();
   const { history, loading, error } = useInstallHistory(user?.id);
   const { isInstalled, refresh: refreshInstalled } = useInstalledApps();
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-4xl mx-auto px-4 py-6">
-        <header className="flex items-center gap-2 mb-6">
-          <Button asChild variant="ghost" size="icon-sm">
-            <Link to="/more">
-              <ChevronLeft className="size-5" />
-            </Link>
-          </Button>
-          <h1 className="text-2xl font-semibold">Install History</h1>
-        </header>
+    <>
+      <PhotonNavBar>
+        <PhotonNavBarBackButton onClick={() => navigate("/more")} />
+        <PhotonNavBarTitle>Install History</PhotonNavBarTitle>
+      </PhotonNavBar>
 
+      <PhotonContentArea>
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Spinner className="size-6" />
@@ -63,7 +62,7 @@ export function InstallHistoryScreen() {
             )}
           </div>
         )}
-      </div>
-    </div>
+      </PhotonContentArea>
+    </>
   );
 }

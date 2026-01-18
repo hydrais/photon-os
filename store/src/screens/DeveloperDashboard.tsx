@@ -1,64 +1,74 @@
-import { Link } from "react-router";
-import { ArrowLeft, Plus } from "lucide-react";
+import { Link, useNavigate } from "react-router";
+import { Plus } from "lucide-react";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { DeveloperAppCard } from "@/components/dashboard/DeveloperAppCard";
 import { useDeveloperProfile } from "@/hooks/useDeveloperProfile";
 import { useMyApps } from "@/hooks/useMyApps";
+import { PhotonNavBar } from "@/components/ui/photon/nav-bar";
+import { PhotonNavBarBackButton } from "@/components/ui/photon/nav-bar-back-button";
+import { PhotonNavBarTitle } from "@/components/ui/photon/nav-bar-title";
+import { PhotonSectionHeader } from "@/components/ui/photon/section-header";
+import { PhotonContentArea } from "@/components/ui/photon/content-area";
 
-function DeveloperDashboardContent() {
+function StoreDashboardContent() {
   const { profile } = useDeveloperProfile();
   const { apps, loading, refetch } = useMyApps(profile?.id || null);
+  const navigate = useNavigate();
 
   const listedApps = apps.filter((app) => app.status === "listed");
   const unlistedApps = apps.filter((app) => app.status === "unlisted");
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-4xl mx-auto px-4 py-6">
-        <header className="mb-6">
-          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4">
-            <Link to="/more">
-              <ArrowLeft className="size-4" data-icon="inline-start" />
-              Back
-            </Link>
-          </Button>
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-2xl font-semibold">My Apps</h1>
-            <Button asChild size="sm">
-              <Link to="/submit">
-                <Plus className="size-4" data-icon="inline-start" />
-                List New App
-              </Link>
-            </Button>
-          </div>
-        </header>
+    <>
+      <PhotonNavBar>
+        <PhotonNavBarBackButton onClick={() => navigate("/more")} />
 
+        <PhotonNavBarTitle>Your Apps</PhotonNavBarTitle>
+
+        <Button asChild>
+          <Link to="/submit">
+            <Plus />
+            List New App
+          </Link>
+        </Button>
+      </PhotonNavBar>
+
+      <PhotonContentArea>
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <Spinner className="size-8" />
+          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground">
+            <Spinner />
           </div>
-        ) : apps.length === 0 ? (
-          <div className="text-center py-12">
-            <h2 className="text-xl font-semibold mb-2">No apps yet</h2>
-            <p className="text-muted-foreground mb-4">
-              You haven't listed any apps in the store yet.
-            </p>
-            <Button asChild>
-              <Link to="/submit">
-                <Plus className="size-4" data-icon="inline-start" />
-                List Your First App
-              </Link>
-            </Button>
-          </div>
+        ) : listedApps.length === 0 ? (
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>No apps yet</EmptyTitle>
+              <EmptyDescription>
+                You haven't listed any apps in the store yet.
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button asChild>
+                <Link to="/submit">List Your First App</Link>
+              </Button>
+            </EmptyContent>
+          </Empty>
         ) : (
-          <div className="space-y-8">
+          <>
             {listedApps.length > 0 && (
               <section>
-                <h2 className="text-lg font-medium mb-4">
+                <PhotonSectionHeader>
                   Listed ({listedApps.length})
-                </h2>
+                </PhotonSectionHeader>
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   {listedApps.map((app) => (
                     <DeveloperAppCard
@@ -73,9 +83,10 @@ function DeveloperDashboardContent() {
 
             {unlistedApps.length > 0 && (
               <section>
-                <h2 className="text-lg font-medium mb-4">
+                <PhotonSectionHeader>
                   Unlisted ({unlistedApps.length})
-                </h2>
+                </PhotonSectionHeader>
+
                 <div className="grid gap-4 sm:grid-cols-2">
                   {unlistedApps.map((app) => (
                     <DeveloperAppCard
@@ -87,17 +98,17 @@ function DeveloperDashboardContent() {
                 </div>
               </section>
             )}
-          </div>
+          </>
         )}
-      </div>
-    </div>
+      </PhotonContentArea>
+    </>
   );
 }
 
-export function DeveloperDashboardScreen() {
+export function StoreDashboardScreen() {
   return (
     <AuthGuard requireProfile>
-      <DeveloperDashboardContent />
+      <StoreDashboardContent />
     </AuthGuard>
   );
 }

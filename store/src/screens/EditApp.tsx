@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useParams, useNavigate } from "react-router";
 import {
   Card,
   CardHeader,
@@ -16,6 +14,10 @@ import { ReleaseManagement } from "@/components/dashboard/ReleaseManagement";
 import { ReviewManagement } from "@/components/dashboard/ReviewManagement";
 import { useDeveloperProfile } from "@/hooks/useDeveloperProfile";
 import { supabase, type StoreApp } from "@/lib/supabase/client";
+import { PhotonNavBar } from "@/components/ui/photon/nav-bar";
+import { PhotonNavBarBackButton } from "@/components/ui/photon/nav-bar-back-button";
+import { PhotonNavBarTitle } from "@/components/ui/photon/nav-bar-title";
+import { PhotonContentArea } from "@/components/ui/photon/content-area";
 
 function EditAppContent() {
   const { appId } = useParams<{ appId: string }>();
@@ -57,39 +59,45 @@ function EditAppContent() {
   }, [appId, profile]);
 
   const handleSuccess = () => {
-    navigate("/dashboard");
+    navigate("/more/store/dashboard");
   };
 
   const handleCancel = () => {
-    navigate("/dashboard");
+    navigate("/more/store/dashboard");
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Spinner className="size-8" />
-      </div>
+      <>
+        <PhotonNavBar>
+          <PhotonNavBarBackButton onClick={() => navigate("/more/store/dashboard")} />
+          <PhotonNavBarTitle>Edit App</PhotonNavBarTitle>
+        </PhotonNavBar>
+        <PhotonContentArea>
+          <div className="flex items-center justify-center py-12">
+            <Spinner className="size-8" />
+          </div>
+        </PhotonContentArea>
+      </>
     );
   }
 
   if (error || !app) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container max-w-lg mx-auto px-4 py-6">
-          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4">
-            <Link to="/dashboard">
-              <ArrowLeft className="size-4" data-icon="inline-start" />
-              Back to Dashboard
-            </Link>
-          </Button>
+      <>
+        <PhotonNavBar>
+          <PhotonNavBarBackButton onClick={() => navigate("/more/store/dashboard")} />
+          <PhotonNavBarTitle>Edit App</PhotonNavBarTitle>
+        </PhotonNavBar>
+        <PhotonContentArea>
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold mb-2">App Not Found</h2>
             <p className="text-muted-foreground">
               {error || "The app you're looking for doesn't exist or you don't have permission to edit it."}
             </p>
           </div>
-        </div>
-      </div>
+        </PhotonContentArea>
+      </>
     );
   }
 
@@ -118,18 +126,13 @@ function EditAppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-lg mx-auto px-4 py-6">
-        <header className="mb-6">
-          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4">
-            <Link to="/dashboard">
-              <ArrowLeft className="size-4" data-icon="inline-start" />
-              Back to Dashboard
-            </Link>
-          </Button>
-          <h1 className="text-2xl font-semibold">Edit App</h1>
-        </header>
+    <>
+      <PhotonNavBar>
+        <PhotonNavBarBackButton onClick={() => navigate("/more/store/dashboard")} />
+        <PhotonNavBarTitle>Edit App</PhotonNavBarTitle>
+      </PhotonNavBar>
 
+      <PhotonContentArea>
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -178,8 +181,8 @@ function EditAppContent() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
+      </PhotonContentArea>
+    </>
   );
 }
 

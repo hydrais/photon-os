@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { supabase, type AppCategory } from "@/lib/supabase/client";
 
 export type UpdateAppData = {
   name: string;
@@ -7,6 +7,7 @@ export type UpdateAppData = {
   iconUrl?: string | null;
   description?: string | null;
   tagline?: string | null;
+  category?: AppCategory | null;
 };
 
 export function useUpdateApp() {
@@ -26,6 +27,7 @@ export function useUpdateApp() {
           icon_url: data.iconUrl || null,
           description: data.description || null,
           tagline: data.tagline || null,
+          category: data.category || null,
         })
         .eq("id", appId);
 

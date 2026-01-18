@@ -18,10 +18,18 @@ function formatDate(dateString: string) {
 export function ReviewList({ reviews, currentUserId }: ReviewListProps) {
   const otherReviews = reviews.filter((r) => r.user_id !== currentUserId);
 
-  if (otherReviews.length === 0) {
+  if (reviews.length === 0) {
     return (
       <p className="text-sm text-muted-foreground italic">
         No reviews yet. Be the first to review this app!
+      </p>
+    );
+  }
+
+  if (otherReviews.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground italic">
+        No reviews from other users yet.
       </p>
     );
   }

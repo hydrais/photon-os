@@ -15,14 +15,14 @@ export function PhotonTabBarItem({
   return (
     <button
       className={cn(
-        "cursor-pointer flex flex-col gap-1 hover:text-primary",
+        "cursor-pointer flex flex-col gap-1 hover:text-primary transition-all",
         active && "text-primary",
       )}
       onClick={onClick}
     >
       <div
         className={cn(
-          "p-2 min-w-[60px] rounded-full flex items-center justify-center",
+          "p-2 min-w-[60px] rounded-full flex items-center justify-center transition-all",
           active && "bg-primary/10",
         )}
       >

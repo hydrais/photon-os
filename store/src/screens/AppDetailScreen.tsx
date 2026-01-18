@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { useParams, useNavigate } from "react-router";
+import { Pencil, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
@@ -16,14 +16,28 @@ import { useUserReview } from "@/hooks/useUserReview";
 import { useSubmitReview } from "@/hooks/useSubmitReview";
 import { useInstalledApps } from "@/hooks/useInstalledApps";
 import { os } from "@/lib/os";
+import { PhotonNavBar } from "@/components/ui/photon/nav-bar";
+import { PhotonNavBarBackButton } from "@/components/ui/photon/nav-bar-back-button";
+import { PhotonNavBarTitle } from "@/components/ui/photon/nav-bar-title";
+import { PhotonContentArea } from "@/components/ui/photon/content-area";
 
 export function AppDetailScreen() {
+  const navigate = useNavigate();
+
   const { appId } = useParams<{ appId: string }>();
   const { app, loading, error, refetch: refetchApp } = useAppDetail(appId);
   const { releases, loading: releasesLoading } = useAppReleases(appId);
   const { reviews, refetch: refetchReviews } = useAppReviews(appId);
-  const { review: userReview, userId, refetch: refetchUserReview } = useUserReview(appId);
-  const { submit: submitReview, loading: submitting, error: submitError } = useSubmitReview();
+  const {
+    review: userReview,
+    userId,
+    refetch: refetchUserReview,
+  } = useUserReview(appId);
+  const {
+    submit: submitReview,
+    loading: submitting,
+    error: submitError,
+  } = useSubmitReview();
   const { isInstalled, refresh: refreshInstalled } = useInstalledApps();
   const [installing, setInstalling] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -65,7 +79,10 @@ export function AppDetailScreen() {
     }
   };
 
-  const handleSubmitReview = async (rating: number, comment: string | null): Promise<boolean> => {
+  const handleSubmitReview = async (
+    rating: number,
+    comment: string | null,
+  ): Promise<boolean> => {
     if (!appId) return false;
     const success = await submitReview(appId, { rating, comment });
     if (success) {
@@ -80,105 +97,99 @@ export function AppDetailScreen() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Spinner className="size-8" />
-      </div>
+      <>
+        <PhotonNavBar>
+          <PhotonNavBarBackButton onClick={() => navigate(-1)} />
+          <PhotonNavBarTitle>App Details</PhotonNavBarTitle>
+        </PhotonNavBar>
+        <PhotonContentArea>
+          <div className="flex items-center justify-center py-12">
+            <Spinner className="size-8" />
+          </div>
+        </PhotonContentArea>
+      </>
     );
   }
 
   if (error || !app) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="container max-w-4xl mx-auto px-4 py-6">
-          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4">
-            <Link to="/search">
-              <ArrowLeft className="size-4" data-icon="inline-start" />
-              Back
-            </Link>
-          </Button>
+      <>
+        <PhotonNavBar>
+          <PhotonNavBarBackButton onClick={() => navigate(-1)} />
+          <PhotonNavBarTitle>App Details</PhotonNavBarTitle>
+        </PhotonNavBar>
+        <PhotonContentArea>
           <div className="text-center py-12">
             <h2 className="text-xl font-semibold mb-2">App Not Found</h2>
             <p className="text-muted-foreground">
               The app you're looking for doesn't exist.
             </p>
           </div>
-        </div>
-      </div>
+        </PhotonContentArea>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-4xl mx-auto px-4 py-6">
-        <header className="mb-6">
-          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4">
-            <Link to="/search">
-              <ArrowLeft className="size-4" data-icon="inline-start" />
-              Back
-            </Link>
-          </Button>
-        </header>
+    <>
+      <PhotonNavBar>
+        <PhotonNavBarBackButton onClick={() => navigate(-1)} />
+        <PhotonNavBarTitle>{app.name}</PhotonNavBarTitle>
+      </PhotonNavBar>
 
+      <PhotonContentArea>
         {/* App Header */}
-        <div className="flex items-start gap-4 mb-6">
-          <AppIconImage
-            iconUrl={app.icon_url}
-            appName={app.name}
-            size="lg"
-          />
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-bold truncate">{app.name}</h1>
-            {app.tagline && (
-              <p className="text-muted-foreground">{app.tagline}</p>
-            )}
-            {app.developer_id ? (
-              <Link
-                to={`/developer/${app.developer_id}`}
-                className="text-muted-foreground hover:underline"
-              >
-                {app.author}
-              </Link>
-            ) : (
-              <p className="text-muted-foreground">{app.author}</p>
-            )}
-            {app.current_version && (
-              <p className="text-sm text-muted-foreground mt-1">
-                Version {app.current_version}
-              </p>
-            )}
-            {app.review_count > 0 && (
-              <div className="flex items-center gap-2 mt-1">
-                <StarRating rating={Math.round(app.average_rating || 0)} size="sm" />
-                <span className="text-sm text-muted-foreground">
-                  {app.average_rating?.toFixed(1)} ({app.review_count} {app.review_count === 1 ? "review" : "reviews"})
-                </span>
-              </div>
-            )}
+        <div className="flex flex-col gap-4 ">
+          <div className="flex items-center gap-4 p-2 pb-0">
+            <AppIconImage iconUrl={app.icon_url} appName={app.name} size="lg" />
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl font-bold truncate">{app.name}</h1>
+              {app.tagline && (
+                <p className="text-muted-foreground">{app.tagline}</p>
+              )}
+            </div>
           </div>
+
+          {/* Install/Open Button */}
+          <Button
+            onClick={installed ? handleOpen : handleInstall}
+            disabled={installing}
+            className="w-full"
+          >
+            {installing ? (
+              <Spinner className="size-4" />
+            ) : installed ? (
+              "Open"
+            ) : (
+              "Install"
+            )}
+          </Button>
         </div>
 
-        {/* Install/Open Button */}
-        <Button
-          onClick={installed ? handleOpen : handleInstall}
-          disabled={installing}
-          className="w-full mb-6"
-        >
-          {installing ? (
-            <Spinner className="size-4" />
-          ) : installed ? (
-            "Open"
-          ) : (
-            "Install"
-          )}
-        </Button>
+        <div className="flex flex-row divide-x bg-gray-100 rounded-lg">
+          <div className="flex flex-col gap-2 py-4 px-2 flex-1 items-center justify-center">
+            <h3 className="text-xs text-muted-foreground">Rating</h3>
+            <div className="flex flex-row gap-1 items-center">
+              <Star className={"fill-yellow-400 text-yellow-400 size-4"} />{" "}
+              {app.average_rating?.toFixed(1)}
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 p-2 flex-1 items-center justify-center">
+            <h3 className="text-xs text-muted-foreground">Author</h3>
+            <p className="text-sm text-foreground">{app.author}</p>
+          </div>
+          <div className="flex flex-col gap-2 p-2 flex-1 items-center justify-center">
+            <h3 className="text-xs text-muted-foreground">Version</h3>
+            <p className="text-sm text-foreground">v{app.current_version}</p>
+          </div>
+        </div>
 
         {/* Description */}
         {app.description && (
           <>
-            <Separator className="my-6" />
             <div>
               <h2 className="text-lg font-semibold mb-2">About</h2>
-              <p className="text-muted-foreground whitespace-pre-wrap">
+              <p className="text-muted-foreground whitespace-pre-wrap text-sm">
                 {app.description}
               </p>
             </div>
@@ -188,18 +199,18 @@ export function AppDetailScreen() {
         {/* Latest Release */}
         {app.latestRelease && (
           <>
-            <Separator className="my-6" />
+            <Separator className="my-2" />
             <div>
               <h2 className="text-lg font-semibold mb-2">What's New</h2>
-              <p className="text-sm text-muted-foreground mb-1">
+              <p className="text-xs text-muted-foreground mb-1">
                 Version {app.latestRelease.version}
               </p>
               {app.latestRelease.release_notes ? (
-                <p className="text-muted-foreground whitespace-pre-wrap">
+                <p className="text-muted-foreground text-sm whitespace-pre-wrap">
                   {app.latestRelease.release_notes}
                 </p>
               ) : (
-                <p className="text-muted-foreground italic">
+                <p className="text-muted-foreground text-sm italic">
                   No release notes for this version.
                 </p>
               )}
@@ -210,7 +221,7 @@ export function AppDetailScreen() {
         {/* Changelog */}
         {releases.length > 0 && (
           <>
-            <Separator className="my-6" />
+            <Separator className="my-2" />
             <div>
               <h2 className="text-lg font-semibold mb-4">Changelog</h2>
               {releasesLoading ? (
@@ -223,14 +234,29 @@ export function AppDetailScreen() {
         )}
 
         {/* Reviews */}
-        <Separator className="my-6" />
+        <Separator className="my-2" />
         <div>
-          <h2 className="text-lg font-semibold mb-4">Reviews</h2>
+          <div className="flex items-center justify-between gap-2 mb-4">
+            <h2 className="text-lg font-semibold">Reviews</h2>
+
+            {app.review_count > 0 && (
+              <div className="flex items-center gap-2">
+                <StarRating
+                  rating={Math.round(app.average_rating || 0)}
+                  size="sm"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {app.average_rating?.toFixed(1)} ({app.review_count}{" "}
+                  {app.review_count === 1 ? "review" : "reviews"})
+                </span>
+              </div>
+            )}
+          </div>
 
           {/* User's Review Section */}
           {userReview && !editingReview ? (
-            <div className="border rounded-lg p-4 mb-4 bg-muted/30">
-              <div className="flex items-center justify-between mb-2">
+            <div className="border rounded-lg p-4 mb-4 bg-muted/30 gap-2">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium">Your Review</span>
                   <StarRating rating={userReview.rating} size="sm" />
@@ -284,7 +310,7 @@ export function AppDetailScreen() {
           {/* Other Reviews */}
           <ReviewList reviews={reviews} currentUserId={userId} />
         </div>
-      </div>
-    </div>
+      </PhotonContentArea>
+    </>
   );
 }

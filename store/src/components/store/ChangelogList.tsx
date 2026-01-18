@@ -24,7 +24,7 @@ export function ChangelogList({ releases }: ChangelogListProps) {
     <div className="space-y-4">
       {releases.map((release) => (
         <div key={release.id} className="border-b pb-4 last:border-b-0">
-          <div className="flex items-baseline justify-between gap-2">
+          <div className="flex items-baseline justify-between gap-2 text-sm">
             <span className="font-medium">v{release.version}</span>
             <span className="text-sm text-muted-foreground">
               {formatDate(release.published_at)}

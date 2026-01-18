@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { supabase } from "@/lib/supabase/client";
+import { supabase, type AppCategory } from "@/lib/supabase/client";
 
 export type SubmitAppData = {
   bundleId: string;
@@ -9,6 +9,7 @@ export type SubmitAppData = {
   description?: string;
   developerId: string;
   developerDisplayName: string;
+  category?: AppCategory | null;
 };
 
 export function useSubmitApp() {
@@ -27,6 +28,7 @@ export function useSubmitApp() {
       icon_url: data.iconUrl || null,
       description: data.description || null,
       developer_id: data.developerId,
+      category: data.category || null,
     });
 
     setLoading(false);

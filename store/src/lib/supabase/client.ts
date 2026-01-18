@@ -18,6 +18,16 @@ export type DeveloperProfile = {
   updated_at: string;
 };
 
+export type AppCategory = "avatar" | "tools" | "games" | "social" | "media" | "education";
+
+export type Category = {
+  id: string;
+  slug: AppCategory;
+  name: string;
+  description: string | null;
+  created_at: string;
+};
+
 export type StoreApp = {
   id: string;
   bundle_id: string;
@@ -37,6 +47,8 @@ export type StoreApp = {
   current_version: string | null;
   average_rating: number | null;
   review_count: number;
+  featured: boolean;
+  category: AppCategory | null;
 };
 
 export type AppRelease = {

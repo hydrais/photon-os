@@ -81,7 +81,7 @@ export function DeveloperAppCard({ app, onUpdate }: DeveloperAppCardProps) {
         )}
         <CardFooter className="mt-auto gap-2 flex-wrap">
           <Button asChild size="sm" variant="outline" className="flex-1">
-            <Link to={`/dashboard/app/${app.id}/edit`}>
+            <Link to={`/more/store/app/${app.id}`}>
               <Pencil className="size-4" data-icon="inline-start" />
               Edit
             </Link>

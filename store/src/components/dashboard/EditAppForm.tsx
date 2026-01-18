@@ -9,8 +9,16 @@ import {
   FieldError,
   FieldGroup,
 } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useUpdateApp, type UpdateAppData } from "@/hooks/useUpdateApp";
-import type { StoreApp } from "@/lib/supabase/client";
+import { useCategories } from "@/hooks/useCategories";
+import type { StoreApp, AppCategory } from "@/lib/supabase/client";
 
 type FormData = {
   name: string;
@@ -18,6 +26,7 @@ type FormData = {
   url: string;
   iconUrl: string;
   description: string;
+  category: AppCategory | "";
 };
 
 type EditAppFormProps = {
@@ -28,12 +37,14 @@ type EditAppFormProps = {
 
 export function EditAppForm({ app, onSuccess, onCancel }: EditAppFormProps) {
   const { update, loading, error } = useUpdateApp();
+  const { categories } = useCategories();
   const [formData, setFormData] = useState<FormData>({
     name: app.name,
     tagline: app.tagline || "",
     url: app.url,
     iconUrl: app.icon_url || "",
     description: app.description || "",
+    category: app.category || "",
   });
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<keyof FormData, string>>
@@ -73,6 +84,7 @@ export function EditAppForm({ app, onSuccess, onCancel }: EditAppFormProps) {
       url: formData.url.trim(),
       iconUrl: formData.iconUrl?.trim() || null,
       description: formData.description?.trim() || null,
+      category: formData.category || null,
     };
 
     const success = await update(app.id, updateData);
@@ -157,6 +169,33 @@ export function EditAppForm({ app, onSuccess, onCancel }: EditAppFormProps) {
             onChange={handleChange("description")}
             rows={3}
           />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="category">Category (optional)</FieldLabel>
+          <Select
+            value={formData.category}
+            onValueChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                category: value as AppCategory | "",
+              }))
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat.slug} value={cat.slug}>
+                  {cat.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            Choose a category to help users discover your app
+          </p>
         </Field>
 
         {error && <div className="text-destructive text-sm">{error}</div>}

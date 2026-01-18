@@ -9,7 +9,16 @@ import {
   FieldError,
   FieldGroup,
 } from "@/components/ui/field";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useSubmitApp } from "@/hooks/useSubmitApp";
+import { useCategories } from "@/hooks/useCategories";
+import type { AppCategory } from "@/lib/supabase/client";
 
 type FormData = {
   bundleId: string;
@@ -17,6 +26,7 @@ type FormData = {
   url: string;
   iconUrl: string;
   description: string;
+  category: AppCategory | "";
 };
 
 type SubmitAppFormProps = {
@@ -31,12 +41,14 @@ export function SubmitAppForm({
   onSuccess,
 }: SubmitAppFormProps) {
   const { submit, loading, error } = useSubmitApp();
+  const { categories } = useCategories();
   const [formData, setFormData] = useState<FormData>({
     bundleId: "",
     name: "",
     url: "",
     iconUrl: "",
     description: "",
+    category: "",
   });
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<keyof FormData, string>>
@@ -84,6 +96,7 @@ export function SubmitAppForm({
       description: formData.description?.trim() || undefined,
       developerId,
       developerDisplayName,
+      category: formData.category || null,
     });
 
     if (success) {
@@ -168,6 +181,33 @@ export function SubmitAppForm({
             onChange={handleChange("description")}
             rows={3}
           />
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="category">Category (optional)</FieldLabel>
+          <Select
+            value={formData.category}
+            onValueChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                category: value as AppCategory | "",
+              }))
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((cat) => (
+                <SelectItem key={cat.slug} value={cat.slug}>
+                  {cat.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-1">
+            Choose a category to help users discover your app
+          </p>
         </Field>
 
         {error && (

@@ -17,6 +17,8 @@ import { ProfileEditScreen } from "./screens/ProfileEdit";
 import { InstallHistoryScreen } from "./screens/InstallHistoryScreen";
 import { RecentUpdatesScreen } from "./screens/RecentUpdatesScreen";
 import { AppDetailScreen } from "./screens/AppDetailScreen";
+import { EditAppScreen } from "./screens/EditApp";
+import { CategoryScreen } from "./screens/CategoryScreen";
 
 export default function App() {
   useApplyScale();
@@ -31,12 +33,13 @@ export default function App() {
         <Route path="/app/:appId" element={<AppDetailScreen />} />
 
         <Route path="/discover" element={<DiscoverScreen />} />
-        <Route path="/avatar" element={<DiscoverScreen />} />
-        <Route path="/tools" element={<DiscoverScreen />} />
+        <Route path="/avatar" element={<DiscoverScreen category="avatar" />} />
+        <Route path="/tools" element={<DiscoverScreen category="tools" />} />
 
         <Route path="/more" element={<MoreScreen />} />
         <Route path="/more/history" element={<InstallHistoryScreen />} />
         <Route path="/more/updates" element={<RecentUpdatesScreen />} />
+        <Route path="/more/category/:categorySlug" element={<CategoryScreen />} />
 
         <Route
           path="/more/store/dashboard"
@@ -46,6 +49,8 @@ export default function App() {
         <Route path="/more/store/edit" element={<ProfileEditScreen />} />
 
         <Route path="/more/store/setup" element={<ProfileSetupScreen />} />
+
+        <Route path="/more/store/app/:appId" element={<EditAppScreen />} />
 
         <Route
           path="/more/store"

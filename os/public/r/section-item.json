@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "section-item",
+  "title": "Section Item",
+  "description": "A clickable list item with optional icon and chevron indicator.",
+  "dependencies": [
+    "lucide-react"
+  ],
+  "files": [
+    {
+      "path": "registry/photon/section-item/section-item.tsx",
+      "content": "import { ChevronRight, type LucideIcon } from \"lucide-react\";\n\nexport function PhotonSectionItem({\n  label,\n  icon: Icon,\n  onClick,\n}: {\n  label: string;\n  icon?: LucideIcon;\n  onClick: () => void;\n}) {\n  return (\n    <button\n      onClick={onClick}\n      className=\"flex flex-row items-center gap-3 py-3 hover:bg-muted/50 px-4 transition-colors w-full text-left first:rounded-tl-md first:rounded-tr-md last:rounded-bl-md last:rounded-br-md\"\n    >\n      {Icon && <Icon className=\"size-4 text-muted-foreground\" />}\n      <span className=\"flex-1 text-sm font-medium text-foreground\">\n        {label}\n      </span>\n      <ChevronRight className=\"size-4 text-muted-foreground\" />\n    </button>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "components/ui/photon/section-item.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "photon-ui",
+  "title": "Photon UI",
+  "description": "All Photon UI components for building Photon OS apps.",
+  "registryDependencies": [
+    "https://os.photon.hydrais.com/r/content-area.json",
+    "https://os.photon.hydrais.com/r/nav-bar.json",
+    "https://os.photon.hydrais.com/r/nav-bar-title.json",
+    "https://os.photon.hydrais.com/r/nav-bar-back-button.json",
+    "https://os.photon.hydrais.com/r/section-header.json",
+    "https://os.photon.hydrais.com/r/section-list.json",
+    "https://os.photon.hydrais.com/r/section-item.json",
+    "https://os.photon.hydrais.com/r/tab-bar.json",
+    "https://os.photon.hydrais.com/r/tab-bar-item.json"
+  ],
+  "files": [],
+  "type": "registry:block"
+}

@@ -1,0 +1,147 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "photon",
+  "homepage": "https://os.photon.hydrais.com",
+  "items": [
+    {
+      "name": "content-area",
+      "type": "registry:ui",
+      "title": "Content Area",
+      "description": "A container component for main content with responsive max-width and scrolling.",
+      "files": [
+        {
+          "path": "registry/photon/content-area/content-area.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/photon/content-area.tsx"
+        }
+      ]
+    },
+    {
+      "name": "nav-bar",
+      "type": "registry:ui",
+      "title": "Navigation Bar",
+      "description": "A header navigation bar container for app titles and actions.",
+      "files": [
+        {
+          "path": "registry/photon/nav-bar/nav-bar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/photon/nav-bar.tsx"
+        }
+      ]
+    },
+    {
+      "name": "nav-bar-title",
+      "type": "registry:ui",
+      "title": "Navigation Bar Title",
+      "description": "A title component for the navigation bar.",
+      "files": [
+        {
+          "path": "registry/photon/nav-bar-title/nav-bar-title.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/photon/nav-bar-title.tsx"
+        }
+      ]
+    },
+    {
+      "name": "nav-bar-back-button",
+      "type": "registry:ui",
+      "title": "Navigation Bar Back Button",
+      "description": "A back button component for navigation bar with arrow icon.",
+      "dependencies": ["lucide-react"],
+      "registryDependencies": ["button"],
+      "files": [
+        {
+          "path": "registry/photon/nav-bar-back-button/nav-bar-back-button.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/photon/nav-bar-back-button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "section-header",
+      "type": "registry:ui",
+      "title": "Section Header",
+      "description": "A header component for labeling content sections.",
+      "files": [
+        {
+          "path": "registry/photon/section-header/section-header.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/photon/section-header.tsx"
+        }
+      ]
+    },
+    {
+      "name": "section-list",
+      "type": "registry:ui",
+      "title": "Section List",
+      "description": "A container component for grouped list items with dividers.",
+      "files": [
+        {
+          "path": "registry/photon/section-list/section-list.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/photon/section-list.tsx"
+        }
+      ]
+    },
+    {
+      "name": "section-item",
+      "type": "registry:ui",
+      "title": "Section Item",
+      "description": "A clickable list item with optional icon and chevron indicator.",
+      "dependencies": ["lucide-react"],
+      "files": [
+        {
+          "path": "registry/photon/section-item/section-item.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/photon/section-item.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tab-bar",
+      "type": "registry:ui",
+      "title": "Tab Bar",
+      "description": "A bottom navigation tab bar container.",
+      "files": [
+        {
+          "path": "registry/photon/tab-bar/tab-bar.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/photon/tab-bar.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tab-bar-item",
+      "type": "registry:ui",
+      "title": "Tab Bar Item",
+      "description": "A tab bar item with icon and label for bottom navigation.",
+      "dependencies": ["lucide-react"],
+      "registryDependencies": ["utils"],
+      "files": [
+        {
+          "path": "registry/photon/tab-bar-item/tab-bar-item.tsx",
+          "type": "registry:ui",
+          "target": "components/ui/photon/tab-bar-item.tsx"
+        }
+      ]
+    },
+    {
+      "name": "photon-ui",
+      "type": "registry:block",
+      "title": "Photon UI",
+      "description": "All Photon UI components for building Photon OS apps.",
+      "registryDependencies": [
+        "https://os.photon.hydrais.com/r/content-area.json",
+        "https://os.photon.hydrais.com/r/nav-bar.json",
+        "https://os.photon.hydrais.com/r/nav-bar-title.json",
+        "https://os.photon.hydrais.com/r/nav-bar-back-button.json",
+        "https://os.photon.hydrais.com/r/section-header.json",
+        "https://os.photon.hydrais.com/r/section-list.json",
+        "https://os.photon.hydrais.com/r/section-item.json",
+        "https://os.photon.hydrais.com/r/tab-bar.json",
+        "https://os.photon.hydrais.com/r/tab-bar-item.json"
+      ],
+      "files": []
+    }
+  ]
+}

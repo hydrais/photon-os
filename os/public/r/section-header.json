@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "section-header",
+  "title": "Section Header",
+  "description": "A header component for labeling content sections.",
+  "files": [
+    {
+      "path": "registry/photon/section-header/section-header.tsx",
+      "content": "import type { PropsWithChildren } from \"react\";\n\nexport function PhotonSectionHeader({ children }: PropsWithChildren) {\n  return (\n    <h2 className=\"text-sm font-medium text-muted-foreground mb-2\">\n      {children}\n    </h2>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "components/ui/photon/section-header.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "nav-bar-back-button",
+  "title": "Navigation Bar Back Button",
+  "description": "A back button component for navigation bar with arrow icon.",
+  "dependencies": [
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "button"
+  ],
+  "files": [
+    {
+      "path": "registry/photon/nav-bar-back-button/nav-bar-back-button.tsx",
+      "content": "import { ArrowLeft } from \"lucide-react\";\nimport { Button } from \"@/components/ui/button\";\n\nexport function PhotonNavBarBackButton({ onClick }: { onClick: () => void }) {\n  return (\n    <Button onClick={onClick} variant=\"secondary\" size=\"icon-lg\">\n      <ArrowLeft />\n    </Button>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "components/ui/photon/nav-bar-back-button.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

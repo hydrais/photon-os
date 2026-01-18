@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "content-area",
+  "title": "Content Area",
+  "description": "A container component for main content with responsive max-width and scrolling.",
+  "files": [
+    {
+      "path": "registry/photon/content-area/content-area.tsx",
+      "content": "import type { PropsWithChildren } from \"react\";\n\nexport function PhotonContentArea({ children }: PropsWithChildren) {\n  return (\n    <main className=\"flex-1 container max-w-4xl mx-auto p-2 flex flex-col gap-2 overflow-y-auto\">\n      {children}\n    </main>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "components/ui/photon/content-area.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

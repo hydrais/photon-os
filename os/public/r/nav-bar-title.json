@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "nav-bar-title",
+  "title": "Navigation Bar Title",
+  "description": "A title component for the navigation bar.",
+  "files": [
+    {
+      "path": "registry/photon/nav-bar-title/nav-bar-title.tsx",
+      "content": "import type { PropsWithChildren } from \"react\";\n\nexport function PhotonNavBarTitle({ children }: PropsWithChildren) {\n  return (\n    <h1 className=\"text-base font-semibold flex-1 first:pl-4\">{children}</h1>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "components/ui/photon/nav-bar-title.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

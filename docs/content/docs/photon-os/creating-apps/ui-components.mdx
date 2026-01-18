@@ -1,0 +1,259 @@
+---
+title: Photon UI Components
+description: Native-style UI components for building Photon OS apps
+---
+
+Photon UI is a collection of components designed to give your app a native Photon OS look and feel. The components are distributed as a [shadcn/ui](https://ui.shadcn.com) compatible registry.
+
+## Prerequisites
+
+Your project needs [shadcn/ui configured](https://ui.shadcn.com/docs/installation). The components also require:
+
+- React
+- Tailwind CSS
+- The `cn` utility from shadcn/ui (installed automatically)
+
+## Installation
+
+### Install All Components
+
+To install all Photon UI components at once:
+
+```bash
+pnpm dlx shadcn@latest add https://os.photon.hydrais.com/r/photon-ui.json
+```
+
+Or with npx:
+
+```bash
+npx shadcn@latest add https://os.photon.hydrais.com/r/photon-ui.json
+```
+
+### Install Individual Components
+
+You can also install components individually:
+
+```bash
+pnpm dlx shadcn@latest add https://os.photon.hydrais.com/r/nav-bar.json
+pnpm dlx shadcn@latest add https://os.photon.hydrais.com/r/tab-bar.json
+# etc.
+```
+
+Components are installed to `components/ui/photon/` in your project.
+
+## Available Components
+
+| Component | Description | Install URL |
+| --------- | ----------- | ----------- |
+| `content-area` | Main content container with responsive max-width and scrolling | `/r/content-area.json` |
+| `nav-bar` | Header navigation bar container | `/r/nav-bar.json` |
+| `nav-bar-title` | Title component for the navigation bar | `/r/nav-bar-title.json` |
+| `nav-bar-back-button` | Back button with arrow icon for navigation | `/r/nav-bar-back-button.json` |
+| `section-header` | Header for labeling content sections | `/r/section-header.json` |
+| `section-list` | Container for grouped list items with dividers | `/r/section-list.json` |
+| `section-item` | Clickable list item with optional icon | `/r/section-item.json` |
+| `tab-bar` | Bottom navigation tab bar container | `/r/tab-bar.json` |
+| `tab-bar-item` | Tab bar item with icon and label | `/r/tab-bar-item.json` |
+
+All URLs are prefixed with `https://os.photon.hydrais.com`.
+
+## Usage Examples
+
+### Basic App Layout
+
+A typical Photon OS app uses `PhotonNavBar` at the top, `PhotonContentArea` for the main content, and optionally `PhotonTabBar` at the bottom:
+
+```tsx
+import { PhotonNavBar } from "@/components/ui/photon/nav-bar";
+import { PhotonNavBarTitle } from "@/components/ui/photon/nav-bar-title";
+import { PhotonContentArea } from "@/components/ui/photon/content-area";
+import { PhotonTabBar } from "@/components/ui/photon/tab-bar";
+import { PhotonTabBarItem } from "@/components/ui/photon/tab-bar-item";
+import { Home, Settings } from "lucide-react";
+
+function App() {
+  const [activeTab, setActiveTab] = useState("home");
+
+  return (
+    <div className="flex flex-col h-full">
+      <PhotonNavBar>
+        <PhotonNavBarTitle>My App</PhotonNavBarTitle>
+      </PhotonNavBar>
+
+      <PhotonContentArea>
+        {/* Your main content here */}
+      </PhotonContentArea>
+
+      <PhotonTabBar>
+        <PhotonTabBarItem
+          label="Home"
+          icon={Home}
+          active={activeTab === "home"}
+          onClick={() => setActiveTab("home")}
+        />
+        <PhotonTabBarItem
+          label="Settings"
+          icon={Settings}
+          active={activeTab === "settings"}
+          onClick={() => setActiveTab("settings")}
+        />
+      </PhotonTabBar>
+    </div>
+  );
+}
+```
+
+### Navigation with Back Button
+
+When navigating to a detail view, use `PhotonNavBarBackButton`:
+
+```tsx
+import { PhotonNavBar } from "@/components/ui/photon/nav-bar";
+import { PhotonNavBarTitle } from "@/components/ui/photon/nav-bar-title";
+import { PhotonNavBarBackButton } from "@/components/ui/photon/nav-bar-back-button";
+
+function DetailPage({ onBack }: { onBack: () => void }) {
+  return (
+    <PhotonNavBar>
+      <PhotonNavBarBackButton onClick={onBack} />
+      <PhotonNavBarTitle>Details</PhotonNavBarTitle>
+    </PhotonNavBar>
+  );
+}
+```
+
+### Settings-Style Lists
+
+Use `PhotonSectionHeader`, `PhotonSectionList`, and `PhotonSectionItem` for settings-style interfaces:
+
+```tsx
+import { PhotonContentArea } from "@/components/ui/photon/content-area";
+import { PhotonSectionHeader } from "@/components/ui/photon/section-header";
+import { PhotonSectionList } from "@/components/ui/photon/section-list";
+import { PhotonSectionItem } from "@/components/ui/photon/section-item";
+import { User, Bell, Shield } from "lucide-react";
+
+function SettingsPage() {
+  return (
+    <PhotonContentArea>
+      <PhotonSectionHeader>Account</PhotonSectionHeader>
+      <PhotonSectionList>
+        <PhotonSectionItem
+          label="Profile"
+          icon={User}
+          onClick={() => navigate("/profile")}
+        />
+        <PhotonSectionItem
+          label="Notifications"
+          icon={Bell}
+          onClick={() => navigate("/notifications")}
+        />
+        <PhotonSectionItem
+          label="Privacy"
+          icon={Shield}
+          onClick={() => navigate("/privacy")}
+        />
+      </PhotonSectionList>
+
+      <PhotonSectionHeader>More</PhotonSectionHeader>
+      <PhotonSectionList>
+        <PhotonSectionItem
+          label="About"
+          onClick={() => navigate("/about")}
+        />
+      </PhotonSectionList>
+    </PhotonContentArea>
+  );
+}
+```
+
+## Component API Reference
+
+### PhotonNavBar
+
+A header container for navigation elements.
+
+```tsx
+<PhotonNavBar>
+  {children}
+</PhotonNavBar>
+```
+
+### PhotonNavBarTitle
+
+Displays the page title in the navigation bar.
+
+```tsx
+<PhotonNavBarTitle>Page Title</PhotonNavBarTitle>
+```
+
+### PhotonNavBarBackButton
+
+A back button with an arrow icon.
+
+| Prop | Type | Description |
+| ---- | ---- | ----------- |
+| `onClick` | `() => void` | Called when the button is clicked |
+
+### PhotonContentArea
+
+A scrollable container for main content.
+
+```tsx
+<PhotonContentArea>
+  {children}
+</PhotonContentArea>
+```
+
+### PhotonSectionHeader
+
+A header for labeling groups of content.
+
+```tsx
+<PhotonSectionHeader>Section Title</PhotonSectionHeader>
+```
+
+### PhotonSectionList
+
+A container that adds dividers between child items.
+
+```tsx
+<PhotonSectionList>
+  {children}
+</PhotonSectionList>
+```
+
+### PhotonSectionItem
+
+A clickable list item for navigation or actions.
+
+| Prop | Type | Description |
+| ---- | ---- | ----------- |
+| `label` | `string` | The text to display |
+| `icon` | `LucideIcon` | Optional icon component from lucide-react |
+| `onClick` | `() => void` | Called when the item is clicked |
+
+### PhotonTabBar
+
+A bottom navigation container.
+
+```tsx
+<PhotonTabBar>
+  {children}
+</PhotonTabBar>
+```
+
+### PhotonTabBarItem
+
+A tab bar button with icon and label.
+
+| Prop | Type | Description |
+| ---- | ---- | ----------- |
+| `label` | `string` | The text to display |
+| `icon` | `LucideIcon` | Icon component from lucide-react |
+| `active` | `boolean` | Whether this tab is currently active |
+| `onClick` | `() => void` | Called when the tab is clicked |
+
+## Customization
+
+All components use Tailwind CSS classes and respect your project's theme variables like `--primary`, `--muted`, `--border`, etc. You can customize the components by editing the installed files in `components/ui/photon/`.

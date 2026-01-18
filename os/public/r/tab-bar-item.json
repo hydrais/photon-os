@@ -1,0 +1,21 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "tab-bar-item",
+  "title": "Tab Bar Item",
+  "description": "A tab bar item with icon and label for bottom navigation.",
+  "dependencies": [
+    "lucide-react"
+  ],
+  "registryDependencies": [
+    "utils"
+  ],
+  "files": [
+    {
+      "path": "registry/photon/tab-bar-item/tab-bar-item.tsx",
+      "content": "import { cn } from \"@/lib/utils\";\nimport type { LucideIcon } from \"lucide-react\";\n\nexport function PhotonTabBarItem({\n  label,\n  icon: Icon,\n  active,\n  onClick,\n}: {\n  label: string;\n  icon: LucideIcon;\n  active: boolean;\n  onClick: () => void;\n}) {\n  return (\n    <button\n      className={cn(\n        \"cursor-pointer flex flex-col gap-1 hover:text-primary transition-all\",\n        active && \"text-primary\",\n      )}\n      onClick={onClick}\n    >\n      <div\n        className={cn(\n          \"p-2 min-w-[60px] rounded-full flex items-center justify-center transition-all\",\n          active && \"bg-primary/10\",\n        )}\n      >\n        <Icon className=\"size-4.5\" />\n      </div>\n      <p className=\"text-xs font-medium\">{label}</p>\n    </button>\n  );\n}\n",
+      "type": "registry:ui",
+      "target": "components/ui/photon/tab-bar-item.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

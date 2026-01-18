@@ -1,0 +1,15 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "section-list",
+  "title": "Section List",
+  "description": "A container component for grouped list items with dividers.",
+  "files": [
+    {
+      "path": "registry/photon/section-list/section-list.tsx",
+      "content": "import type { PropsWithChildren } from \"react\";\n\nexport function PhotonSectionList({ children }: PropsWithChildren) {\n  return <div className=\"divide-y divide-border\">{children}</div>;\n}\n",
+      "type": "registry:ui",
+      "target": "components/ui/photon/section-list.tsx"
+    }
+  ],
+  "type": "registry:ui"
+}

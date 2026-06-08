@@ -4,6 +4,7 @@ import {
   RefreshCw,
   LayoutDashboard,
   User,
+  UserPlus,
   Shirt,
   Wrench,
   Gamepad2,
@@ -31,7 +32,7 @@ const categories: { slug: AppCategory; name: string; icon: LucideIcon }[] = [
 ];
 
 export function MoreScreen() {
-  const { hasProfile, loading } = useDeveloperProfile();
+  const { hasProfile, loading, activeProfile } = useDeveloperProfile();
   const navigate = useNavigate();
 
   return (
@@ -82,6 +83,18 @@ export function MoreScreen() {
               <PhotonSectionHeader>Developer</PhotonSectionHeader>
 
               <PhotonSectionList>
+                <PhotonSectionItem
+                  icon={User}
+                  label={`Active: ${activeProfile?.display_name ?? ""}`}
+                  onClick={() => navigate("/more/store/profiles")}
+                />
+
+                <PhotonSectionItem
+                  icon={UserPlus}
+                  label="Add developer profile"
+                  onClick={() => navigate("/more/store/setup")}
+                />
+
                 <PhotonSectionItem
                   icon={LayoutDashboard}
                   label="Published Apps"

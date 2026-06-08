@@ -33,7 +33,7 @@ export function AuthGuard({ children, requireProfile = false }: AuthGuardProps) 
   }
 
   if (requireProfile && !hasProfile) {
-    return <Navigate to="/profile/setup" replace />;
+    return <Navigate to="/more/store/setup" replace />;
   }
 
   return <>{children}</>;

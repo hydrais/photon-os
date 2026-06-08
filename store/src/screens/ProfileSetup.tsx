@@ -17,15 +17,26 @@ import { PhotonContentArea } from "@/components/ui/photon/content-area";
 
 export function ProfileSetupScreen() {
   const navigate = useNavigate();
-  const { user, loading: profileLoading, isAuthenticated } = useDeveloperProfile();
+  const {
+    user,
+    loading: profileLoading,
+    isAuthenticated,
+    hasProfile,
+    refetch,
+    setActiveProfile,
+  } = useDeveloperProfile();
   const { create, loading, error } = useCreateProfile();
+
+  const title = hasProfile
+    ? "Add Developer Profile"
+    : "Set Up Developer Profile";
 
   if (profileLoading) {
     return (
       <>
         <PhotonNavBar>
           <PhotonNavBarBackButton onClick={() => navigate("/more")} />
-          <PhotonNavBarTitle>Set Up Developer Profile</PhotonNavBarTitle>
+          <PhotonNavBarTitle>{title}</PhotonNavBarTitle>
         </PhotonNavBar>
         <PhotonContentArea>
           <div className="flex items-center justify-center py-12">
@@ -41,7 +52,7 @@ export function ProfileSetupScreen() {
       <>
         <PhotonNavBar>
           <PhotonNavBarBackButton onClick={() => navigate("/more")} />
-          <PhotonNavBarTitle>Set Up Developer Profile</PhotonNavBarTitle>
+          <PhotonNavBarTitle>{title}</PhotonNavBarTitle>
         </PhotonNavBar>
         <PhotonContentArea>
           <div className="text-center py-12">
@@ -56,6 +67,10 @@ export function ProfileSetupScreen() {
   }
 
   const handleSubmit = async (data: { displayName: string; description: string }) => {
+    // Captured before create() so navigation reflects whether this was the
+    // user's first profile or an additional one.
+    const isFirstProfile = !hasProfile;
+
     const profile = await create({
       userId: user.id,
       displayName: data.displayName,
@@ -63,7 +78,14 @@ export function ProfileSetupScreen() {
     });
 
     if (profile) {
-      navigate("/more/store/submit");
+      // Make the newly created profile active. It must be present in the
+      // provider's profiles list first, so refetch before switching.
+      await refetch();
+      setActiveProfile(profile.id);
+
+      // First-time onboarding flows straight into listing an app; adding an
+      // additional profile returns to the (now newly-scoped) dashboard.
+      navigate(isFirstProfile ? "/more/store/submit" : "/more/store/dashboard");
     }
   };
 
@@ -77,15 +99,21 @@ export function ProfileSetupScreen() {
       <PhotonContentArea>
         <Card>
           <CardHeader>
-            <CardTitle>Create Your Profile</CardTitle>
+            <CardTitle>
+              {hasProfile ? "Create Another Profile" : "Create Your Profile"}
+            </CardTitle>
             <CardDescription>
-              Set up your developer profile to list apps in the store. This
-              information will be shown to users who view your apps.
+              {hasProfile
+                ? "Add another developer profile so you can list apps under a different developer name."
+                : "Set up your developer profile to list apps in the store. This information will be shown to users who view your apps."}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <ProfileForm
-              initialData={{ displayName: user.displayName, description: "" }}
+              initialData={{
+                displayName: hasProfile ? "" : user.displayName,
+                description: "",
+              }}
               onSubmit={handleSubmit}
               loading={loading}
               error={error}

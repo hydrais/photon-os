@@ -29,11 +29,7 @@ export function useCreateProfile() {
       setLoading(false);
 
       if (insertError) {
-        if (insertError.code === "23505") {
-          setError("A profile already exists for this user");
-        } else {
-          setError(insertError.message);
-        }
+        setError(insertError.message);
         return null;
       }
 

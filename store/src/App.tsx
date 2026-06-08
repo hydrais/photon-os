@@ -14,6 +14,7 @@ import { MoreScreen } from "./screens/MoreScreen";
 import { StoreDashboardScreen } from "./screens/DeveloperDashboard";
 import { ProfileSetupScreen } from "./screens/ProfileSetup";
 import { ProfileEditScreen } from "./screens/ProfileEdit";
+import { ProfileSwitcherScreen } from "./screens/ProfileSwitcher";
 import { InstallHistoryScreen } from "./screens/InstallHistoryScreen";
 import { RecentUpdatesScreen } from "./screens/RecentUpdatesScreen";
 import { AppDetailScreen } from "./screens/AppDetailScreen";
@@ -52,6 +53,11 @@ export default function App() {
         <Route path="/more/store/edit" element={<ProfileEditScreen />} />
 
         <Route path="/more/store/setup" element={<ProfileSetupScreen />} />
+
+        <Route
+          path="/more/store/profiles"
+          element={<ProfileSwitcherScreen />}
+        />
 
         <Route path="/more/store/app/:appId" element={<EditAppScreen />} />
 

@@ -4,7 +4,6 @@ import { AccountManager } from "./AccountManager";
 import { AppManager } from "./AppManager";
 import { DeviceManager } from "./DeviceManager";
 import { PreferencesManager } from "./PreferencesManager";
-import { SystemManager } from "./SystemManager";
 import { UserManager } from "./UserManager";
 
 export type OSConfig = {
@@ -16,7 +15,6 @@ export class OS {
   public apps: AppManager;
   public devices: DeviceManager;
   public prefs: PreferencesManager;
-  public system: SystemManager;
   public user: UserManager;
 
   private config: OSConfig;
@@ -27,7 +25,6 @@ export class OS {
     this.apps = new AppManager(this);
     this.devices = new DeviceManager(this);
     this.prefs = new PreferencesManager(this);
-    this.system = new SystemManager(this);
     this.user = new UserManager(this);
   }
 

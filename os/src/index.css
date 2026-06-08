@@ -6,7 +6,6 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --os-scale: 1;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -132,8 +131,8 @@
   body,
   #root,
   #frame {
-    width: calc(100dvw / var(--os-scale));
-    height: calc(100dvh / var(--os-scale));
+    width: 100dvw;
+    height: 100dvh;
     overflow: hidden;
   }
 }

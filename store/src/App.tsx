@@ -5,7 +5,6 @@ import {
   Navigate,
   useLocation,
 } from "react-router";
-import { useApplyScale } from "@photon-os/react";
 import { DiscoverScreen } from "./screens/DiscoverScreen";
 import { Star, Shirt, ToolCase, MoreHorizontal } from "lucide-react";
 import { PhotonTabBar } from "./components/ui/photon/tab-bar";
@@ -23,7 +22,6 @@ import { SubmitAppScreen } from "./screens/SubmitApp";
 import { CategoryScreen } from "./screens/CategoryScreen";
 
 export default function App() {
-  useApplyScale();
   const navigate = useNavigate();
   const location = useLocation();
 

@@ -96,7 +96,11 @@ Deno.serve(async (req) => {
           is_online: true,
         },
         {
-          onConflict: "user_id,object_key",
+          // An SL object's key (UUID) changes every time it is re-rezzed, so we
+          // key on the stable (user_id, object_name) instead. A re-rezzed device
+          // then updates its existing row (refreshing object_key / callback_url)
+          // rather than inserting a duplicate.
+          onConflict: "user_id,object_name",
         }
       )
       .select("id")

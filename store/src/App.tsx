@@ -18,6 +18,7 @@ import { InstallHistoryScreen } from "./screens/InstallHistoryScreen";
 import { RecentUpdatesScreen } from "./screens/RecentUpdatesScreen";
 import { AppDetailScreen } from "./screens/AppDetailScreen";
 import { EditAppScreen } from "./screens/EditApp";
+import { SubmitAppScreen } from "./screens/SubmitApp";
 import { CategoryScreen } from "./screens/CategoryScreen";
 
 export default function App() {
@@ -45,6 +46,8 @@ export default function App() {
           path="/more/store/dashboard"
           element={<StoreDashboardScreen />}
         />
+
+        <Route path="/more/store/submit" element={<SubmitAppScreen />} />
 
         <Route path="/more/store/edit" element={<ProfileEditScreen />} />
 

@@ -63,7 +63,7 @@ export function ProfileSetupScreen() {
     });
 
     if (profile) {
-      navigate("/submit");
+      navigate("/more/store/submit");
     }
   };
 

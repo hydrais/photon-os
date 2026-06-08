@@ -1,6 +1,4 @@
-import { useNavigate, Link } from "react-router";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router";
 import {
   Card,
   CardHeader,
@@ -11,13 +9,17 @@ import {
 import { AuthGuard } from "@/components/auth/AuthGuard";
 import { SubmitAppForm } from "@/components/store/SubmitAppForm";
 import { useDeveloperProfile } from "@/hooks/useDeveloperProfile";
+import { PhotonNavBar } from "@/components/ui/photon/nav-bar";
+import { PhotonNavBarBackButton } from "@/components/ui/photon/nav-bar-back-button";
+import { PhotonNavBarTitle } from "@/components/ui/photon/nav-bar-title";
+import { PhotonContentArea } from "@/components/ui/photon/content-area";
 
 function SubmitAppContent() {
   const navigate = useNavigate();
   const { profile } = useDeveloperProfile();
 
   const handleSuccess = () => {
-    navigate("/dashboard");
+    navigate("/more/store/dashboard");
   };
 
   if (!profile) {
@@ -25,18 +27,13 @@ function SubmitAppContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container max-w-lg mx-auto px-4 py-6">
-        <header className="mb-6">
-          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-4">
-            <Link to="/more">
-              <ArrowLeft className="size-4" data-icon="inline-start" />
-              Back
-            </Link>
-          </Button>
-          <h1 className="text-2xl font-semibold">List Your App</h1>
-        </header>
+    <>
+      <PhotonNavBar>
+        <PhotonNavBarBackButton onClick={() => navigate("/more/store/dashboard")} />
+        <PhotonNavBarTitle>List Your App</PhotonNavBarTitle>
+      </PhotonNavBar>
 
+      <PhotonContentArea>
         <Card>
           <CardHeader>
             <CardTitle>App Details</CardTitle>
@@ -52,8 +49,8 @@ function SubmitAppContent() {
             />
           </CardContent>
         </Card>
-      </div>
-    </div>
+      </PhotonContentArea>
+    </>
   );
 }
 

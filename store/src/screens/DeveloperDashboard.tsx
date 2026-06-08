@@ -35,7 +35,7 @@ function StoreDashboardContent() {
         <PhotonNavBarTitle>Your Apps</PhotonNavBarTitle>
 
         <Button asChild>
-          <Link to="/submit">
+          <Link to="/more/store/submit">
             <Plus />
             List New App
           </Link>
@@ -57,7 +57,7 @@ function StoreDashboardContent() {
             </EmptyHeader>
             <EmptyContent>
               <Button asChild>
-                <Link to="/submit">List Your First App</Link>
+                <Link to="/more/store/submit">List Your First App</Link>
               </Button>
             </EmptyContent>
           </Empty>
